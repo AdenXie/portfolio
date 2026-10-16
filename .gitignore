@@ -1,0 +1,6 @@
+node_modules/
+dist/
+media-src/poster/photo.jpg
+media-src/poster/poster.png
+.lighthouse/
+*.log

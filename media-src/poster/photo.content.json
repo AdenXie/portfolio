@@ -1,0 +1,46 @@
+{
+  "photo": "photo.jpg",
+  "focus": [0.55, 0.5],
+  "palette": "ocean",
+  "title": ["fish", "and", "chips"],
+  "subtitle_cn": "一顿酥脆又鲜甜的午餐",
+  "tags": ["food English", "IELTS speaking", "eating out, sharing & treats"],
+  "vocabulary": [
+    { "en": "fish and chips", "cn": "炸鱼薯条", "crop": [0.78, 0.55, 0.42] },
+    { "en": "a paper cone", "cn": "纸筒", "crop": [0.72, 0.22, 0.3] },
+    { "en": "fresh oysters", "cn": "现开的生蚝", "crop": [0.2, 0.72, 0.42] },
+    { "en": "a wedge of lemon", "cn": "一块柠檬", "crop": [0.43, 0.7, 0.13] },
+    { "en": "a tangy sauce", "cn": "酸爽蘸汁", "crop": [0.29, 0.8, 0.2] },
+    { "en": "a crispy coating", "cn": "酥脆的外皮", "crop": [0.8, 0.56, 0.24] },
+    { "en": "blue tumblers", "cn": "蓝色玻璃杯", "crop": [0.61, 0.25, 0.24] },
+    { "en": "a wooden table", "cn": "木桌", "crop": [0.85, 0.86, 0.26] }
+  ],
+  "phrases": [
+    { "en": "squeeze some lemon over it", "cn": "挤点柠檬汁" },
+    { "en": "fresh out of the fryer", "cn": "刚出锅的" },
+    { "en": "share a few plates", "cn": "点几样一起分着吃" },
+    { "en": "slurp down an oyster", "cn": "一口吸掉一只生蚝" },
+    { "en": "go easy on the sauce", "cn": "酱少放点" },
+    { "en": "grab a quick bite", "cn": "随便吃点" },
+    { "en": "a proper treat", "cn": "实打实的犒劳" },
+    { "en": "hit the spot", "cn": "正合心意" }
+  ],
+  "patterns": [
+    { "en": "I always squeeze some lemon over it before the first bite.", "cn": "第一口之前，我总会先挤点柠檬汁。" },
+    { "en": "I'd rather share a few plates than order one big main.", "cn": "比起点一份大主菜，我更愿意点几样一起分着吃。" },
+    { "en": "It's a bit greasy, but it really hits the spot.", "cn": "是有点油，但真的很对胃口。" },
+    { "en": "I'm not big on raw oysters, but I'd try one with sauce.", "cn": "我不太爱吃生蚝，但配着蘸汁可以试一只。" },
+    { "en": "If I had a free afternoon, I'd grab a quick bite like this.", "cn": "要是有个空闲的下午，我会这样随便吃点。" },
+    { "en": "What I love most is the crispy coating with fresh lemon.", "cn": "我最喜欢的是酥脆的外皮配上新鲜柠檬。" }
+  ],
+  "scene": {
+    "en": "This is a casual seafood lunch for two on a wooden table. There are two paper cones of fish and chips, fresh out of the fryer, each with a wedge of lemon. Next to them is a plate of freshly shucked oysters with a tangy dipping sauce. With blue tumblers of water nearby, it looks like a relaxed, proper treat to share.",
+    "cn": "这是一顿摆在木桌上的两人海鲜午餐。两个纸筒里装着刚出锅的炸鱼薯条，各配一块柠檬。旁边是一盘现开的生蚝，配着一小碟酸爽的蘸汁。再加上蓝色玻璃杯里的水，看起来就是一顿适合分享、轻松又实在的犒劳。"
+  },
+  "prompts": [
+    { "q": "Would you rather have fish and chips or raw oysters?", "hints": ["fresh out of the fryer", "slurp down an oyster", "squeeze some lemon over it"] },
+    { "q": "Do you prefer sharing plates or ordering your own?", "hints": ["share a few plates", "grab a quick bite", "hit the spot"] },
+    { "q": "Describe a meal out that felt like a real treat.", "hints": ["a proper treat", "It's a bit …, but …", "What I love most is …"] }
+  ],
+  "tip": { "en": "Say it out loud while you eat it.", "cn": "学习提示：边吃边说一句，最容易记住。" }
+}

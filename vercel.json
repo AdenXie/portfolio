@@ -1,0 +1,22 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/live/jobs.json", "destination": "https://jobs.adenxie.com.cn/insights.json" },
+    { "source": "/live/econ-quarterly.json", "destination": "https://econ.adenxie.com.cn/data/quarterly.json" },
+    { "source": "/live/econ-worldbank.json", "destination": "https://econ.adenxie.com.cn/data/worldbank.json" },
+    { "source": "/live/blog-zh.json", "destination": "https://blog.adenxie.com.cn/latest-posts.json" },
+    { "source": "/live/blog-en.json", "destination": "https://blog.adenxie.com.cn/en/latest-posts.json" }
+  ],
+  "redirects": [
+    { "source": "/:path(.*)", "has": [{ "type": "host", "value": "www.adenxie.com.cn" }], "destination": "https://adenxie.com.cn/:path", "permanent": true },
+    { "source": "/en", "destination": "/en/", "permanent": true }
+  ],
+  "headers": [
+    { "source": "/assets/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
+    { "source": "/media/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }] },
+    { "source": "/live/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=300, s-maxage=600, stale-while-revalidate=3600" }] }
+  ]
+}

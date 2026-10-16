@@ -1,0 +1,82 @@
+{
+  "lang": "zh-CN",
+  "path": "/",
+  "meta": {
+    "title": "Aden Xie · 作品集",
+    "description": "Aden Xie 的个人作品集：秋招信库、Everyday Economics、Photo English Card 等小项目，以及博客的最新文章。",
+    "ogLocale": "zh_CN"
+  },
+  "nav": {
+    "skip": "跳到主要内容",
+    "otherLang": "English",
+    "otherLangLabel": "切换到英文版",
+    "theme": "切换深浅色",
+    "themeToLight": "切换到浅色",
+    "themeToDark": "切换到深色"
+  },
+  "hero": {
+    "name": "Aden Xie",
+    "intro": "经济学专业在读学生，爱好做点小项目。",
+    "avatarAlt": "Aden Xie 的头像",
+    "github": "GitHub",
+    "blog": "博客"
+  },
+  "sections": {
+    "websites": { "title": "网站作品", "desc": "正在运行的网站，数字在打开页面时从各站点读取。" },
+    "skills": { "title": "Agent Skills", "desc": "给编程智能体用的技能包，装好之后在对话里直接调用。" },
+    "writing": { "title": "写作", "desc": "博客最新文章。", "more": "去博客看全部文章" },
+    "activity": { "title": "最近在做", "desc": "GitHub 公开仓库的最近提交，已去掉机器人和纯数据更新。" }
+  },
+  "card": {
+    "visit": "访问",
+    "source": "源码",
+    "techLabel": "技术与亮点",
+    "screenshotAlt": "{name} 首页截图（{device}）",
+    "desktop": "桌面版",
+    "mobile": "手机版",
+    "copyInstall": "复制安装命令",
+    "copied": "已复制",
+    "copyFailed": "复制失败，请手动选择命令",
+    "installFor": "安装到",
+    "viewFull": "查看完整海报",
+    "posterAlt": "用一张炸鱼薯条和生蚝的照片生成的示例海报"
+  },
+  "live": {
+    "updated": "更新于 {date}",
+    "fetched": "读取于 {date}",
+    "jobsTotal": "{n} 条校招岗位",
+    "econQuarter": "ABS 季度数据至 {q}",
+    "econCountries": "{n} 个经济体的年度数据",
+    "unavailable": "暂时读取不到"
+  },
+  "projects": {
+    "jobs": {
+      "name": "秋招信库",
+      "desc": "面向中国校招的岗位信息库，可按关键词和条件筛选，有截止日期提示，还附带在线简历生成器和数据洞察页。",
+      "highlights": ["约每 12 小时同步岗位", "浏览器本地收藏", "在线简历生成器", "手写 SVG 数据洞察"]
+    },
+    "econ": {
+      "name": "Everyday Economics",
+      "desc": "基于官方统计数据的经济数据探索项目，比较物价、工资和人均产出的变化，带「工资跑赢通胀了吗」计算器和「物价时光机」。",
+      "highlights": ["ABS · 世界银行 · 国家统计局", "无 npm 运行时依赖", "中英双语"]
+    },
+    "photoCard": {
+      "name": "Photo English Card",
+      "desc": "一个 Agent Skill，把一张生活照片变成杂志风的英语学习海报，包括词汇、地道短语、句型、看图描述和口语练习。",
+      "highlights": ["渲染脚本零 npm 依赖", "四套配色", "Claude Code / Codex 等"]
+    }
+  },
+  "writing": {
+    "blogName": "Aden's Space",
+    "blogDesc": "记录科技、经验与独立思考的个人博客。"
+  },
+  "activity": {
+    "empty": "暂时没有可显示的提交。",
+    "viewAll": "在 GitHub 上查看"
+  },
+  "footer": {
+    "license": "代码以 AGPL-3.0-only 许可开源；个人介绍文字、头像、截图和示例海报不在许可范围内。",
+    "sourceCode": "本站源码",
+    "dataNote": "数字和文章列表在打开页面时读取；读取失败时显示构建时保存的快照。"
+  }
+}

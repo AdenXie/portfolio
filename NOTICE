@@ -1,0 +1,20 @@
+Copyright 2026 AdenXie
+
+This project's source code is licensed under the GNU Affero General Public
+License, version 3 only (AGPL-3.0-only). See the LICENSE file.
+
+Not covered by that license (all rights reserved):
+- the personal introduction text in src/i18n/ (hero.intro and hero.name);
+- the avatar (media-src/avatar.jpg, public/media/avatar-*.webp) and the share
+  image (public/og.png), which contains it;
+- the website screenshots (public/media/screens/);
+- the example poster and its source photo (public/media/photo-english-card-*.webp,
+  media-src/poster/).
+
+Screenshots show other sites by the same author; the data shown in them belongs
+to its respective sources.
+
+Third-party tools used at development time keep their own licenses:
+- Vite, MIT License
+- Playwright (playwright-core), Apache License 2.0
+- sharp, Apache License 2.0

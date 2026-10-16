@@ -1,0 +1,98 @@
+{
+  "jobs": {
+    "total": 8426,
+    "updatedAt": "2026-10-16T07:13:05.573Z",
+    "from": "insights.json",
+    "fetchedAt": "2026-10-16T07:55:58.661Z"
+  },
+  "econ": {
+    "latestQuarter": "2026-Q2",
+    "countries": 10,
+    "updatedAt": "2026-10-12",
+    "fetchedAt": "2026-10-16T07:55:58.671Z"
+  },
+  "blogZh": {
+    "posts": [
+      {
+        "title": "每日简报｜2026-10-16：高利率与战争重塑增长路径",
+        "date": "2026-10-16",
+        "url": "https://blog.adenxie.com.cn/2026/10/16/2026-10-16-daily-brief/"
+      },
+      {
+        "title": "每日简报｜2026-10-15：通胀与航运风险抬升资金成本",
+        "date": "2026-10-15",
+        "url": "https://blog.adenxie.com.cn/2026/10/15/2026-10-15-daily-brief/"
+      },
+      {
+        "title": "每日简报｜2026-10-14：IMF上调增长，能源与AI风险共振",
+        "date": "2026-10-14",
+        "url": "https://blog.adenxie.com.cn/2026/10/14/2026-10-14-daily-brief/"
+      }
+    ],
+    "updatedAt": null,
+    "from": "search.xml",
+    "fetchedAt": "2026-10-16T07:55:58.752Z"
+  },
+  "blogEn": {
+    "posts": [
+      {
+        "title": "Daily Briefing | 2026-10-16: High Interest Rates and War Reshape Growth Paths",
+        "date": "2026-10-16",
+        "url": "https://blog.adenxie.com.cn/en/2026/10/16/2026-10-16-daily-brief/"
+      },
+      {
+        "title": "Daily Briefing | 2026-10-15: Inflation and shipping risks drive up capital costs",
+        "date": "2026-10-15",
+        "url": "https://blog.adenxie.com.cn/en/2026/10/15/2026-10-15-daily-brief/"
+      },
+      {
+        "title": "Daily Briefing | 2026-10-14: IMF raises growth, energy and AI risks resonate",
+        "date": "2026-10-14",
+        "url": "https://blog.adenxie.com.cn/en/2026/10/14/2026-10-14-daily-brief/"
+      }
+    ],
+    "updatedAt": null,
+    "from": "search.xml",
+    "fetchedAt": "2026-10-16T07:55:58.732Z"
+  },
+  "github": {
+    "commits": [
+      {
+        "repo": "everyday-economics",
+        "repoUrl": "https://github.com/AdenXie/everyday-economics",
+        "message": "Add price time machine with currency changeover handling",
+        "date": "2026-10-16T05:15:34Z",
+        "url": "https://github.com/AdenXie/everyday-economics/commit/73754de10e7e9833ca8cdf91eb1fa25830b05763"
+      },
+      {
+        "repo": "everyday-economics",
+        "repoUrl": "https://github.com/AdenXie/everyday-economics",
+        "message": "Add pay-vs-inflation calculator and Australian scroll story",
+        "date": "2026-10-16T04:51:55Z",
+        "url": "https://github.com/AdenXie/everyday-economics/commit/7941db9fbab3e7cf8e37ddda3b876675da64065a"
+      },
+      {
+        "repo": "job-website",
+        "repoUrl": "https://github.com/AdenXie/job-website",
+        "message": "Add local application board, drop dark mode, relicense to AGPL-3.0-only",
+        "date": "2026-10-15T17:59:46Z",
+        "url": "https://github.com/AdenXie/job-website/commit/8b3aeec03769d16eea3a5c7f3ec90878081b3449"
+      },
+      {
+        "repo": "job-website",
+        "repoUrl": "https://github.com/AdenXie/job-website",
+        "message": "Add \"为你推荐\": local job profile and relevance ranking",
+        "date": "2026-10-15T17:24:30Z",
+        "url": "https://github.com/AdenXie/job-website/commit/0765eb1cd3c89f07d964ff1b9ae87bea1eb76100"
+      },
+      {
+        "repo": "job-website",
+        "repoUrl": "https://github.com/AdenXie/job-website",
+        "message": "Add data insights page, job families, URL filters and site-wide theme",
+        "date": "2026-10-15T16:45:24Z",
+        "url": "https://github.com/AdenXie/job-website/commit/c2da4c1b1bad6aa3e7cb2098a867d8cc0bf117b8"
+      }
+    ],
+    "fetchedAt": "2026-10-16T07:52:58.483Z"
+  }
+}

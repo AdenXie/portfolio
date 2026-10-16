@@ -1,0 +1,82 @@
+{
+  "lang": "en",
+  "path": "/en/",
+  "meta": {
+    "title": "Aden Xie · Portfolio",
+    "description": "Aden Xie's portfolio: small projects including Job Repo, Everyday Economics and Photo English Card, plus the latest blog posts.",
+    "ogLocale": "en_US"
+  },
+  "nav": {
+    "skip": "Skip to main content",
+    "otherLang": "中文",
+    "otherLangLabel": "Switch to Chinese",
+    "theme": "Toggle light and dark theme",
+    "themeToLight": "Switch to light theme",
+    "themeToDark": "Switch to dark theme"
+  },
+  "hero": {
+    "name": "Aden Xie",
+    "intro": "An economics student who enjoys building small projects.",
+    "avatarAlt": "Aden Xie's avatar",
+    "github": "GitHub",
+    "blog": "Blog"
+  },
+  "sections": {
+    "websites": { "title": "Websites", "desc": "Sites that are live now. Figures are read from each site when you open this page." },
+    "skills": { "title": "Agent Skills", "desc": "Skill packs for coding agents: install once, then call them from a chat." },
+    "writing": { "title": "Writing", "desc": "Latest posts from the blog.", "more": "All posts on the blog" },
+    "activity": { "title": "Recently", "desc": "Latest commits to public GitHub repositories, without bot and data-only commits." }
+  },
+  "card": {
+    "visit": "Visit",
+    "source": "Source",
+    "techLabel": "Stack and highlights",
+    "screenshotAlt": "{name} home page ({device})",
+    "desktop": "desktop",
+    "mobile": "mobile",
+    "copyInstall": "Copy install command",
+    "copied": "Copied",
+    "copyFailed": "Copy failed. Please select the command manually",
+    "installFor": "Install for",
+    "viewFull": "View the full poster",
+    "posterAlt": "Example poster made from a photo of fish and chips and oysters"
+  },
+  "live": {
+    "updated": "Updated {date}",
+    "fetched": "Fetched {date}",
+    "jobsTotal": "{n} campus job listings",
+    "econQuarter": "ABS quarterly data to {q}",
+    "econCountries": "Annual data for {n} economies",
+    "unavailable": "Not available right now"
+  },
+  "projects": {
+    "jobs": {
+      "name": "Job Repo",
+      "desc": "A database of campus jobs in China with keyword and filter search and deadline reminders, plus an online resume builder and a data insights page. The site is in Chinese.",
+      "highlights": ["Synced about every 12 hours", "Local bookmarks in the browser", "Online resume builder", "Hand-written SVG insights"]
+    },
+    "econ": {
+      "name": "Everyday Economics",
+      "desc": "An open data project built on official statistics that compares prices, wages and output per person, with a pay-versus-inflation calculator and a price time machine.",
+      "highlights": ["ABS · World Bank · NBS China", "No npm runtime dependencies", "Chinese and English"]
+    },
+    "photoCard": {
+      "name": "Photo English Card",
+      "desc": "An Agent Skill that turns an everyday photo into a magazine-style English study poster: vocabulary, natural phrases, sentence patterns, a scene description and speaking prompts.",
+      "highlights": ["Renderer has no npm dependencies", "Four colour palettes", "Claude Code, Codex and others"]
+    }
+  },
+  "writing": {
+    "blogName": "Aden's Space",
+    "blogDesc": "A personal blog on technology, experience and independent thinking. English posts are machine-translated."
+  },
+  "activity": {
+    "empty": "No commits to show right now.",
+    "viewAll": "View on GitHub"
+  },
+  "footer": {
+    "license": "Code is licensed under AGPL-3.0-only. The personal introduction, avatar, screenshots and example poster are not covered by the licence.",
+    "sourceCode": "Source of this site",
+    "dataNote": "Figures and posts are read when you open the page; if that fails, the snapshot saved at build time is shown."
+  }
+}
