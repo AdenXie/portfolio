@@ -19,7 +19,8 @@
     "intro": "经济学专业在读学生，爱好做点小项目。",
     "avatarAlt": "Aden Xie 的头像",
     "github": "GitHub",
-    "blog": "博客"
+    "blog": "博客",
+    "email": "邮箱"
   },
   "sections": {
     "websites": { "title": "网站作品", "desc": "正在运行的网站，数字在打开页面时从各站点读取。" },

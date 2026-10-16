@@ -19,7 +19,8 @@
     "intro": "An economics student who enjoys building small projects.",
     "avatarAlt": "Aden Xie's avatar",
     "github": "GitHub",
-    "blog": "Blog"
+    "blog": "Blog",
+    "email": "Email"
   },
   "sections": {
     "websites": { "title": "Websites", "desc": "Sites that are live now. Figures are read from each site when you open this page." },

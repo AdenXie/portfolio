@@ -9,6 +9,7 @@ export const site = {
   url: 'https://adenxie.com.cn',
   github: 'https://github.com/AdenXie',
   blog: 'https://blog.adenxie.com.cn/',
+  email: 'aden@adenxie.com.cn',
   githubUser: 'AdenXie',
 };
 
