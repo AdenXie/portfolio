@@ -53,7 +53,19 @@ export const projects = [
     // Taken from the project README.
     install: [
       { label: 'Claude Code', command: 'git clone https://github.com/AdenXie/photo-english-card.git ~/.claude/skills/photo-english-card' },
-      { label: 'Codex', command: 'git clone https://github.com/AdenXie/photo-english-card.git ~/.codex/skills/photo-english-card' },
+      { label: 'Codex', command: 'git clone https://github.com/AdenXie/photo-english-card.git "$HOME/.agents/skills/photo-english-card"' },
+    ],
+  },
+  {
+    id: 'headshot',
+    category: 'skills',
+    source: 'https://github.com/AdenXie/american-corporate-headshot',
+    image: 'american-corporate-headshot',
+    imageSize: [1080, 1080],
+    tech: ['Agent Skill', 'Image Editing', 'Python'],
+    install: [
+      { label: 'Claude Code', command: 'git clone --depth 1 https://github.com/AdenXie/american-corporate-headshot.git "$HOME/.claude/skills/american-corporate-headshot"' },
+      { label: 'Codex', command: 'git clone --depth 1 https://github.com/AdenXie/american-corporate-headshot.git "$HOME/.agents/skills/american-corporate-headshot"' },
     ],
   },
 ];

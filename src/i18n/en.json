@@ -65,6 +65,14 @@
       "name": "Photo English Card",
       "desc": "An Agent Skill that turns an everyday photo into a magazine-style English study poster: vocabulary, natural phrases, sentence patterns, a scene description and speaking prompts.",
       "highlights": ["Renderer has no npm dependencies", "Four colour palettes", "Claude Code, Codex and others"]
+    },
+    "headshot": {
+      "name": "American Corporate Headshot",
+      "desc": "An Agent Skill that edits a selfie or upper-body photo into a natural American corporate headshot for LinkedIn, resumes and personal sites. Choose from five styles, or get an English editing prompt when image tools are unavailable.",
+      "highlights": ["Five professional styles", "Likeness preservation and visual QA", "Prompt Studio mode"],
+      "imageAlt": "AI-generated fictional subject wearing dark round glasses, a navy blazer and a light-blue shirt against a warm-gray studio background",
+      "imageNote": "AI-generated · Fictional subject",
+      "viewFull": "View the full headshot"
     }
   },
   "writing": {

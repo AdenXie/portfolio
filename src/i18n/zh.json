@@ -65,6 +65,14 @@
       "name": "Photo English Card",
       "desc": "一个 Agent Skill，把一张生活照片变成杂志风的英语学习海报，包括词汇、地道短语、句型、看图描述和口语练习。",
       "highlights": ["渲染脚本零 npm 依赖", "四套配色", "Claude Code / Codex 等"]
+    },
+    "headshot": {
+      "name": "American Corporate Headshot",
+      "desc": "一个 Agent Skill，把自拍或半身照编辑成自然的美式职业头像，用于 LinkedIn、简历和个人主页。支持五种风格；没有图像编辑工具时，可输出英文提示词。",
+      "highlights": ["五种职业风格", "外貌保留与视觉质检", "Prompt Studio 模式"],
+      "imageAlt": "AI 生成的虚构人物示例：戴黑框眼镜，穿海军蓝西装与浅蓝衬衫，暖灰色棚拍背景",
+      "imageNote": "AI 生成 · 虚构人物示例",
+      "viewFull": "查看完整头像"
     }
   },
   "writing": {

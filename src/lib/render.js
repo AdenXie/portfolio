@@ -98,9 +98,11 @@ function skillCard(p, t) {
   const m = `/media/${p.image}`;
   const [w, h] = p.imageSize;
   const first = p.install[0];
+  const viewFull = text.viewFull || t.card.viewFull;
   return `<article class="card card-skill reveal" id="work-${esc(p.id)}">
-  <a class="poster" href="${m}-1080.webp" aria-label="${esc(t.card.viewFull)}">
-    <img src="${m}-640.webp" srcset="${m}-640.webp 640w, ${m}-1080.webp 1080w" sizes="(min-width: 960px) 360px, 100vw" width="${w}" height="${h}" alt="${esc(t.card.posterAlt)}" loading="lazy" decoding="async">
+  <a class="poster" href="${m}-1080.webp" aria-label="${esc(viewFull)}">
+    <img src="${m}-640.webp" srcset="${m}-640.webp 640w, ${m}-1080.webp 1080w" sizes="(min-width: 960px) 360px, 100vw" width="${w}" height="${h}" alt="${esc(text.imageAlt || t.card.posterAlt)}" loading="lazy" decoding="async">
+    ${text.imageNote ? `<span class="sample-note">${esc(text.imageNote)}</span>` : ''}
   </a>
   <div class="card-body">
     <h3>${esc(text.name)}</h3>
@@ -114,7 +116,7 @@ function skillCard(p, t) {
       <div class="actions">
         <button type="button" class="btn btn-primary" data-copy data-label="${esc(t.card.copyInstall)}" data-done="${esc(t.card.copied)}" data-fail="${esc(t.card.copyFailed)}">${icon.copy}<span>${esc(t.card.copyInstall)}</span></button>
         <a class="btn" href="${esc(p.source)}">${icon.code}${esc(t.card.source)}</a>
-        <a class="link" href="${m}-1080.webp">${esc(t.card.viewFull)}</a>
+        <a class="link" href="${m}-1080.webp">${esc(viewFull)}</a>
       </div>
       <p class="sr-only" role="status" aria-live="polite" data-copy-status></p>
     </div>
