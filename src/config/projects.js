@@ -4,6 +4,7 @@
 // Category `layout` picks the card template in src/lib/render.js:
 //   website — screenshots, live figures, Visit / Source buttons
 //   skill   — example image, install command, Source link
+//   plugin  — install command, Source and package links (no image)
 
 export const site = {
   url: 'https://adenxie.com.cn',
@@ -16,6 +17,7 @@ export const site = {
 export const categories = [
   { id: 'websites', layout: 'website' },
   { id: 'skills', layout: 'skill' },
+  { id: 'harnessPlugins', layout: 'plugin' },
 ];
 
 export const projects = [
@@ -66,6 +68,18 @@ export const projects = [
     install: [
       { label: 'Claude Code', command: 'git clone --depth 1 https://github.com/AdenXie/american-corporate-headshot.git "$HOME/.claude/skills/american-corporate-headshot"' },
       { label: 'Codex', command: 'git clone --depth 1 https://github.com/AdenXie/american-corporate-headshot.git "$HOME/.agents/skills/american-corporate-headshot"' },
+    ],
+  },
+  {
+    id: 'dshVercel',
+    category: 'harnessPlugins',
+    source: 'https://github.com/AdenXie/dsh-vercel',
+    package: 'https://www.npmjs.com/package/@adenxie/dsh-vercel',
+    tech: ['DSH Plugin', 'TypeScript', 'MCP', 'OAuth'],
+    // Taken from the project README; update the version with each release.
+    install: [
+      { label: 'Desktop (PowerShell)', command: "$DshCli = Join-Path $env:LOCALAPPDATA 'Programs\\DeepSeek Harness\\resources\\runtime\\cli\\bin\\dsh.cmd'\n& $DshCli plugin --profile desktop add '@adenxie/dsh-vercel@0.3.1'" },
+      { label: 'Web', command: 'dsh plugin --profile web add @adenxie/dsh-vercel@0.3.1' },
     ],
   },
 ];

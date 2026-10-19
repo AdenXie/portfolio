@@ -23,10 +23,27 @@
     "email": "邮箱"
   },
   "sections": {
-    "websites": { "title": "网站作品", "desc": "正在运行的网站，数字在打开页面时从各站点读取。" },
-    "skills": { "title": "Agent Skills", "desc": "给编程智能体用的技能包，装好之后在对话里直接调用。" },
-    "writing": { "title": "写作", "desc": "博客最新文章。", "more": "去博客看全部文章" },
-    "activity": { "title": "最近在做", "desc": "GitHub 公开仓库的最近提交，已去掉机器人和纯数据更新。" }
+    "websites": {
+      "title": "网站作品",
+      "desc": "正在运行的网站，数字在打开页面时从各站点读取。"
+    },
+    "skills": {
+      "title": "Agent Skills",
+      "desc": "给编程智能体用的技能包，装好之后在对话里直接调用。"
+    },
+    "harnessPlugins": {
+      "title": "Harness Plugins",
+      "desc": "DeepSeek Harness（DSH）的插件，用 dsh 命令行安装。"
+    },
+    "writing": {
+      "title": "写作",
+      "desc": "博客最新文章。",
+      "more": "去博客看全部文章"
+    },
+    "activity": {
+      "title": "最近在做",
+      "desc": "GitHub 公开仓库的最近提交，已去掉机器人和纯数据更新。"
+    }
   },
   "card": {
     "visit": "访问",
@@ -40,7 +57,8 @@
     "copyFailed": "复制失败，请手动选择命令",
     "installFor": "安装到",
     "viewFull": "查看完整海报",
-    "posterAlt": "用一张炸鱼薯条和生蚝的照片生成的示例海报"
+    "posterAlt": "用一张炸鱼薯条和生蚝的照片生成的示例海报",
+    "package": "npm 包"
   },
   "live": {
     "updated": "更新于 {date}",
@@ -54,25 +72,52 @@
     "jobs": {
       "name": "秋招信库",
       "desc": "面向中国校招的岗位信息库，可按关键词和条件筛选，有截止日期提示，还附带在线简历生成器和数据洞察页。",
-      "highlights": ["约每 12 小时同步岗位", "浏览器本地收藏", "在线简历生成器", "手写 SVG 数据洞察"]
+      "highlights": [
+        "约每 12 小时同步岗位",
+        "浏览器本地收藏",
+        "在线简历生成器",
+        "手写 SVG 数据洞察"
+      ]
     },
     "econ": {
       "name": "Everyday Economics",
       "desc": "基于官方统计数据的经济数据探索项目，比较物价、工资和人均产出的变化，带「工资跑赢通胀了吗」计算器和「物价时光机」。",
-      "highlights": ["ABS · 世界银行 · 国家统计局", "无 npm 运行时依赖", "中英双语"]
+      "highlights": [
+        "ABS · 世界银行 · 国家统计局",
+        "无 npm 运行时依赖",
+        "中英双语"
+      ]
     },
     "photoCard": {
       "name": "Photo English Card",
       "desc": "一个 Agent Skill，把一张生活照片变成杂志风的英语学习海报，包括词汇、地道短语、句型、看图描述和口语练习。",
-      "highlights": ["渲染脚本零 npm 依赖", "四套配色", "Claude Code / Codex 等"]
+      "highlights": [
+        "渲染脚本零 npm 依赖",
+        "四套配色",
+        "Claude Code / Codex 等"
+      ]
     },
     "headshot": {
       "name": "American Corporate Headshot",
       "desc": "一个 Agent Skill，把自拍或半身照编辑成自然的美式职业头像，用于 LinkedIn、简历和个人主页。支持五种风格；没有图像编辑工具时，可输出英文提示词。",
-      "highlights": ["五种职业风格", "外貌保留与视觉质检", "Prompt Studio 模式"],
+      "highlights": [
+        "五种职业风格",
+        "外貌保留与视觉质检",
+        "Prompt Studio 模式"
+      ],
       "imageAlt": "AI 生成的虚构人物示例：戴黑框眼镜，穿海军蓝西装与浅蓝衬衫，暖灰色棚拍背景",
       "imageNote": "AI 生成 · 虚构人物示例",
       "viewFull": "查看完整头像"
+    },
+    "dshVercel": {
+      "name": "dsh-vercel",
+      "desc": "一个 DeepSeek Harness 插件：通过 OAuth 连接 Vercel 官方 MCP，在 DSH 对话里按需加载 Vercel 工具，并附带 34 个 Vercel 官方技能指南。",
+      "highlights": [
+        "工具按需加载",
+        "OAuth PKCE · 自动刷新令牌",
+        "附带 34 个 Vercel 技能"
+      ],
+      "installNote": "Desktop：安装前先初始化并完全退出 DSH Desktop，安装后重新启动。"
     }
   },
   "writing": {

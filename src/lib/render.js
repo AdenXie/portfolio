@@ -97,7 +97,6 @@ function skillCard(p, t) {
   const text = t.projects[p.id];
   const m = `/media/${p.image}`;
   const [w, h] = p.imageSize;
-  const first = p.install[0];
   const viewFull = text.viewFull || t.card.viewFull;
   return `<article class="card card-skill reveal" id="work-${esc(p.id)}">
   <a class="poster" href="${m}-1080.webp" aria-label="${esc(viewFull)}">
@@ -108,23 +107,43 @@ function skillCard(p, t) {
     <h3>${esc(text.name)}</h3>
     <p class="desc">${esc(text.desc)}</p>
     ${tags(p, text, t)}
-    <div class="install" data-install>
-      <div class="seg" role="group" aria-label="${esc(t.card.installFor)}">
-        ${p.install.map((x, i) => `<button type="button" data-command="${esc(x.command)}" aria-pressed="${i === 0}">${esc(x.label)}</button>`).join('')}
-      </div>
-      <pre><code>${esc(first.command)}</code></pre>
-      <div class="actions">
-        <button type="button" class="btn btn-primary" data-copy data-label="${esc(t.card.copyInstall)}" data-done="${esc(t.card.copied)}" data-fail="${esc(t.card.copyFailed)}">${icon.copy}<span>${esc(t.card.copyInstall)}</span></button>
-        <a class="btn" href="${esc(p.source)}">${icon.code}${esc(t.card.source)}</a>
-        <a class="link" href="${m}-1080.webp">${esc(viewFull)}</a>
-      </div>
-      <p class="sr-only" role="status" aria-live="polite" data-copy-status></p>
-    </div>
+    ${installBlock(p, t, `<a class="link" href="${m}-1080.webp">${esc(viewFull)}</a>`)}
   </div>
 </article>`;
 }
 
-const layouts = { website: websiteCard, skill: skillCard };
+// Install command switcher with copy button; `extra` is appended to the action row.
+function installBlock(p, t, extra = '', note = '') {
+  return `<div class="install" data-install>
+      <div class="seg" role="group" aria-label="${esc(t.card.installFor)}">
+        ${p.install.map((x, i) => `<button type="button" data-command="${esc(x.command)}" aria-pressed="${i === 0}">${esc(x.label)}</button>`).join('')}
+      </div>
+      <pre><code>${esc(p.install[0].command)}</code></pre>
+      ${note ? `<p class="install-note">${esc(note)}</p>` : ''}
+      <div class="actions">
+        <button type="button" class="btn btn-primary" data-copy data-label="${esc(t.card.copyInstall)}" data-done="${esc(t.card.copied)}" data-fail="${esc(t.card.copyFailed)}">${icon.copy}<span>${esc(t.card.copyInstall)}</span></button>
+        <a class="btn" href="${esc(p.source)}">${icon.code}${esc(t.card.source)}</a>
+        ${extra}
+      </div>
+      <p class="sr-only" role="status" aria-live="polite" data-copy-status></p>
+    </div>`;
+}
+
+function pluginCard(p, t) {
+  const text = t.projects[p.id];
+  return `<article class="card card-plugin reveal" id="work-${esc(p.id)}">
+  <div class="card-body">
+    <div class="plugin-info">
+      <h3>${esc(text.name)}</h3>
+      <p class="desc">${esc(text.desc)}</p>
+      ${tags(p, text, t)}
+    </div>
+    ${installBlock(p, t, p.package ? `<a class="link" href="${esc(p.package)}">${esc(t.card.package)}${icon.arrow}</a>` : '', text.installNote)}
+  </div>
+</article>`;
+}
+
+const layouts = { website: websiteCard, skill: skillCard, plugin: pluginCard };
 
 // ---- page ----
 

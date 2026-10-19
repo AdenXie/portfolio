@@ -23,10 +23,27 @@
     "email": "Email"
   },
   "sections": {
-    "websites": { "title": "Websites", "desc": "Sites that are live now. Figures are read from each site when you open this page." },
-    "skills": { "title": "Agent Skills", "desc": "Skill packs for coding agents: install once, then call them from a chat." },
-    "writing": { "title": "Writing", "desc": "Latest posts from the blog.", "more": "All posts on the blog" },
-    "activity": { "title": "Recently", "desc": "Latest commits to public GitHub repositories, without bot and data-only commits." }
+    "websites": {
+      "title": "Websites",
+      "desc": "Sites that are live now. Figures are read from each site when you open this page."
+    },
+    "skills": {
+      "title": "Agent Skills",
+      "desc": "Skill packs for coding agents: install once, then call them from a chat."
+    },
+    "harnessPlugins": {
+      "title": "Harness Plugins",
+      "desc": "Plugins for DeepSeek Harness (DSH), installed with the dsh CLI."
+    },
+    "writing": {
+      "title": "Writing",
+      "desc": "Latest posts from the blog.",
+      "more": "All posts on the blog"
+    },
+    "activity": {
+      "title": "Recently",
+      "desc": "Latest commits to public GitHub repositories, without bot and data-only commits."
+    }
   },
   "card": {
     "visit": "Visit",
@@ -40,7 +57,8 @@
     "copyFailed": "Copy failed. Please select the command manually",
     "installFor": "Install for",
     "viewFull": "View the full poster",
-    "posterAlt": "Example poster made from a photo of fish and chips and oysters"
+    "posterAlt": "Example poster made from a photo of fish and chips and oysters",
+    "package": "npm package"
   },
   "live": {
     "updated": "Updated {date}",
@@ -54,25 +72,52 @@
     "jobs": {
       "name": "Job Repo",
       "desc": "A database of campus jobs in China with keyword and filter search and deadline reminders, plus an online resume builder and a data insights page. The site is in Chinese.",
-      "highlights": ["Synced about every 12 hours", "Local bookmarks in the browser", "Online resume builder", "Hand-written SVG insights"]
+      "highlights": [
+        "Synced about every 12 hours",
+        "Local bookmarks in the browser",
+        "Online resume builder",
+        "Hand-written SVG insights"
+      ]
     },
     "econ": {
       "name": "Everyday Economics",
       "desc": "An open data project built on official statistics that compares prices, wages and output per person, with a pay-versus-inflation calculator and a price time machine.",
-      "highlights": ["ABS · World Bank · NBS China", "No npm runtime dependencies", "Chinese and English"]
+      "highlights": [
+        "ABS · World Bank · NBS China",
+        "No npm runtime dependencies",
+        "Chinese and English"
+      ]
     },
     "photoCard": {
       "name": "Photo English Card",
       "desc": "An Agent Skill that turns an everyday photo into a magazine-style English study poster: vocabulary, natural phrases, sentence patterns, a scene description and speaking prompts.",
-      "highlights": ["Renderer has no npm dependencies", "Four colour palettes", "Claude Code, Codex and others"]
+      "highlights": [
+        "Renderer has no npm dependencies",
+        "Four colour palettes",
+        "Claude Code, Codex and others"
+      ]
     },
     "headshot": {
       "name": "American Corporate Headshot",
       "desc": "An Agent Skill that edits a selfie or upper-body photo into a natural American corporate headshot for LinkedIn, resumes and personal sites. Choose from five styles, or get an English editing prompt when image tools are unavailable.",
-      "highlights": ["Five professional styles", "Likeness preservation and visual QA", "Prompt Studio mode"],
+      "highlights": [
+        "Five professional styles",
+        "Likeness preservation and visual QA",
+        "Prompt Studio mode"
+      ],
       "imageAlt": "AI-generated fictional subject wearing dark round glasses, a navy blazer and a light-blue shirt against a warm-gray studio background",
       "imageNote": "AI-generated · Fictional subject",
       "viewFull": "View the full headshot"
+    },
+    "dshVercel": {
+      "name": "dsh-vercel",
+      "desc": "A DeepSeek Harness plugin that connects to Vercel's official MCP server over OAuth, loads Vercel tools on demand in DSH chats, and bundles 34 official Vercel skill guides.",
+      "highlights": [
+        "On-demand tool loading",
+        "OAuth PKCE with token refresh",
+        "34 bundled Vercel skills"
+      ],
+      "installNote": "Desktop: initialize and fully quit DSH Desktop before installing, then restart it."
     }
   },
   "writing": {

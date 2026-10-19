@@ -21,7 +21,7 @@ npm test
 
 ## 新增作品
 
-1. 在 `src/config/projects.js` 的 `projects` 里加一项：`category` 取 `websites` 或 `skills`，或者在 `categories` 里新增一类。
+1. 在 `src/config/projects.js` 的 `projects` 里加一项：`category` 取 `websites`（截图和实时数字）、`skills`（示例图和安装命令）或 `harnessPlugins`（只有安装命令和包链接），也可以在 `categories` 里新增一类。
 2. 在 `src/i18n/zh.json` 和 `src/i18n/en.json` 的 `projects.<id>` 下写名称、介绍和亮点。两个文件的 key 必须一致，`npm test` 会检查。
 3. 网站作品运行 `npm run screenshots <id>` 生成截图；Agent Skill 的示例图放在 `public/media/` 下。
 
