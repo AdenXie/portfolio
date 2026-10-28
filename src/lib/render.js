@@ -183,7 +183,6 @@ export function renderPage(t, data, other) {
       </ul>
     </div>
   </section>
-${sections}
   <section class="section" id="writing" aria-labelledby="h-writing">
     <div class="section-head reveal"><h2 id="h-writing">${esc(t.sections.writing.title)}</h2><p>${esc(t.sections.writing.desc)}</p></div>
     <div class="card card-writing reveal">
@@ -192,6 +191,7 @@ ${sections}
       <div class="writing-foot"><p class="stamp" data-posts-stamp>${fetchedStamp(blog, t)}</p><a class="link" href="${esc(blogHome)}">${esc(t.sections.writing.more)}${icon.arrow}</a></div>
     </div>
   </section>
+${sections}
 </main>
 <footer class="footer">
   <div class="wrap">
