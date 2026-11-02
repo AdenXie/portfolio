@@ -143,7 +143,23 @@ function pluginCard(p, t) {
 </article>`;
 }
 
-const layouts = { website: websiteCard, skill: skillCard, plugin: pluginCard };
+function toolCard(p, t) {
+  const text = t.projects[p.id];
+  return `<article class="card card-tool reveal" id="work-${esc(p.id)}">
+  <div class="card-body">
+    <h3>${esc(text.name)}</h3>
+    <p class="desc">${esc(text.desc)}</p>
+    ${tags(p, text, t)}
+    <p class="requirements">${esc(text.requirements)}</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="${esc(p.download)}">${esc(t.card.download)}${icon.arrow}</a>
+      <a class="btn" href="${esc(p.source)}">${icon.code}${esc(t.card.source)}</a>
+    </div>
+  </div>
+</article>`;
+}
+
+const layouts = { website: websiteCard, skill: skillCard, plugin: pluginCard, tool: toolCard };
 
 // ---- page ----
 

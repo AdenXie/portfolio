@@ -5,6 +5,7 @@
 //   website — screenshots, live figures, Visit / Source buttons
 //   skill   — example image, install command, Source link
 //   plugin  — install command, Source and package links (no image)
+//   tool    — download and Source buttons, requirements note (no image)
 
 export const site = {
   url: 'https://adenxie.com.cn',
@@ -16,6 +17,7 @@ export const site = {
 
 export const categories = [
   { id: 'websites', layout: 'website' },
+  { id: 'desktopTools', layout: 'tool' },
   { id: 'skills', layout: 'skill' },
   { id: 'harnessPlugins', layout: 'plugin' },
 ];
@@ -43,6 +45,13 @@ export const projects = [
     screenshot: 'econ',
     tech: ['JavaScript', 'SVG', 'Node.js', 'Vercel'],
     live: 'econ',
+  },
+  {
+    id: 'stutterScope',
+    category: 'desktopTools',
+    source: 'https://github.com/AdenXie/StutterScope',
+    download: 'https://github.com/AdenXie/StutterScope/releases/latest',
+    tech: ['C#', '.NET Framework 4.8', 'PresentMon', 'ETW'],
   },
   {
     id: 'photoCard',

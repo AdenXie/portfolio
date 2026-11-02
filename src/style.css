@@ -183,3 +183,6 @@ pre { margin: 0; padding: 12px 14px; border: 1px solid var(--line); border-radiu
   .plugin-info { display: flex; flex-direction: column; gap: 16px; }
 }
 @media (max-width: 899px) { .plugin-info { display: flex; flex-direction: column; gap: 16px; } }
+
+/* tool card (no image) */
+.requirements { font-size: 13.5px; color: var(--muted); }

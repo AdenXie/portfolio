@@ -27,6 +27,10 @@
       "title": "网站作品",
       "desc": "正在运行的网站，数字在打开页面时从各站点读取。"
     },
+    "desktopTools": {
+      "title": "桌面工具",
+      "desc": "在自己电脑上运行的小工具，从 GitHub Releases 下载。"
+    },
     "skills": {
       "title": "Agent Skills",
       "desc": "给编程智能体用的技能包，装好之后在对话里直接调用。"
@@ -58,7 +62,8 @@
     "installFor": "安装到",
     "viewFull": "查看完整海报",
     "posterAlt": "用一张炸鱼薯条和生蚝的照片生成的示例海报",
-    "package": "npm 包"
+    "package": "npm 包",
+    "download": "下载"
   },
   "live": {
     "updated": "更新于 {date}",
@@ -87,6 +92,16 @@
         "无 npm 运行时依赖",
         "中英双语"
       ]
+    },
+    "stutterScope": {
+      "name": "StutterScope",
+      "desc": "Windows 游戏微卡顿记录器：把 PresentMon 逐帧数据和 CPU、GPU、磁盘、内存、后台进程活动对齐，可选 WPR/ETW 深度跟踪，关闭记录窗口后生成离线 HTML 报告。",
+      "highlights": [
+        "便携包，解压即用",
+        "无注入、无叠加层、不上传数据",
+        "可选 WPR/ETW 深度跟踪"
+      ],
+      "requirements": "Windows 11 x64，需要管理员授权；Windows 10 尚未验证。"
     },
     "photoCard": {
       "name": "Photo English Card",

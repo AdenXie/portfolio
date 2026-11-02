@@ -27,6 +27,10 @@
       "title": "Websites",
       "desc": "Sites that are live now. Figures are read from each site when you open this page."
     },
+    "desktopTools": {
+      "title": "Desktop Tools",
+      "desc": "Small tools that run on your own computer, downloaded from GitHub Releases."
+    },
     "skills": {
       "title": "Agent Skills",
       "desc": "Skill packs for coding agents: install once, then call them from a chat."
@@ -58,7 +62,8 @@
     "installFor": "Install for",
     "viewFull": "View the full poster",
     "posterAlt": "Example poster made from a photo of fish and chips and oysters",
-    "package": "npm package"
+    "package": "npm package",
+    "download": "Download"
   },
   "live": {
     "updated": "Updated {date}",
@@ -87,6 +92,16 @@
         "No npm runtime dependencies",
         "Chinese and English"
       ]
+    },
+    "stutterScope": {
+      "name": "StutterScope",
+      "desc": "A recorder for in-game micro-stutter on Windows. It lines up PresentMon per-frame data with CPU, GPU, disk, memory and background-process activity, can add WPR/ETW deep traces, and writes an offline HTML report when you close the recording window.",
+      "highlights": [
+        "Portable, no installer",
+        "No injection, overlay or uploads",
+        "Optional WPR/ETW deep tracing"
+      ],
+      "requirements": "Windows 11 x64, needs administrator permission. Windows 10 not yet verified."
     },
     "photoCard": {
       "name": "Photo English Card",
