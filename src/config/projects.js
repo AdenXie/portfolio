@@ -3,7 +3,7 @@
 //
 // Category `layout` picks the card template in src/lib/render.js:
 //   website — screenshots, live figures, Visit / Source buttons
-//   skill   — example image, install command, Source link
+//   skill   — install command, Source link; example image optional
 //   plugin  — install command, Source and package links (no image)
 //   tool    — download and Source buttons, requirements note (no image)
 
@@ -77,6 +77,17 @@ export const projects = [
     install: [
       { label: 'Claude Code', command: 'git clone --depth 1 https://github.com/AdenXie/american-corporate-headshot.git "$HOME/.claude/skills/american-corporate-headshot"' },
       { label: 'Codex', command: 'git clone --depth 1 https://github.com/AdenXie/american-corporate-headshot.git "$HOME/.agents/skills/american-corporate-headshot"' },
+    ],
+  },
+  {
+    id: 'designMd',
+    category: 'skills',
+    source: 'https://github.com/AdenXie/design-md-skill',
+    tech: ['Agent Skill', 'DESIGN.md', 'Markdown'],
+    // Taken from the project README.
+    install: [
+      { label: 'Claude Code', command: 'git clone https://github.com/AdenXie/design-md-skill.git ~/.claude/skills/design-md' },
+      { label: 'Codex', command: 'git clone https://github.com/AdenXie/design-md-skill.git ~/.agents/skills/design-md' },
     ],
   },
   {

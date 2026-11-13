@@ -124,6 +124,15 @@
       "imageNote": "AI-generated · Fictional subject",
       "viewFull": "View the full headshot"
     },
+    "designMd": {
+      "name": "design-md",
+      "desc": "An Agent Skill bundling 84 DESIGN.md design systems inspired by well-known products. Describe a style in plain words and the agent picks the closest one or two from a bilingual index, without loading the whole library into context. The design files come from VoltAgent/awesome-design-md.",
+      "highlights": [
+        "84 design systems",
+        "Bilingual style index",
+        "Offers candidates when the style is vague"
+      ]
+    },
     "dshVercel": {
       "name": "dsh-vercel",
       "desc": "A DeepSeek Harness plugin that connects to Vercel's official MCP server over OAuth, loads Vercel tools on demand in DSH chats, and bundles 34 official Vercel skill guides.",

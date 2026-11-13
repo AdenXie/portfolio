@@ -124,6 +124,15 @@
       "imageNote": "AI 生成 · 虚构人物示例",
       "viewFull": "查看完整头像"
     },
+    "designMd": {
+      "name": "design-md",
+      "desc": "一个 Agent Skill，内置 84 份按知名产品风格整理的 DESIGN.md 设计规范。用自然语言描述想要的风格，代理会从中英文索引里挑出最合适的 1～2 份来读，不会把整个库塞进上下文。规范来自 VoltAgent/awesome-design-md。",
+      "highlights": [
+        "84 份设计规范",
+        "中英文风格索引",
+        "风格描述模糊时先给候选"
+      ]
+    },
     "dshVercel": {
       "name": "dsh-vercel",
       "desc": "一个 DeepSeek Harness 插件：通过 OAuth 连接 Vercel 官方 MCP，在 DSH 对话里按需加载 Vercel 工具，并附带 34 个 Vercel 官方技能指南。",

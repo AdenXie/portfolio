@@ -93,21 +93,23 @@ function websiteCard(p, t, data) {
 </article>`;
 }
 
+// `image` is optional: without it the card has no poster and no "view full" link.
 function skillCard(p, t) {
   const text = t.projects[p.id];
   const m = `/media/${p.image}`;
-  const [w, h] = p.imageSize;
+  const [w, h] = p.imageSize || [];
   const viewFull = text.viewFull || t.card.viewFull;
-  return `<article class="card card-skill reveal" id="work-${esc(p.id)}">
-  <a class="poster" href="${m}-1080.webp" aria-label="${esc(viewFull)}">
+  const cls = `card card-skill${p.image ? '' : ' no-image'} reveal`;
+  return `<article class="${cls}" id="work-${esc(p.id)}">
+  ${p.image ? `<a class="poster" href="${m}-1080.webp" aria-label="${esc(viewFull)}">
     <img src="${m}-640.webp" srcset="${m}-640.webp 640w, ${m}-1080.webp 1080w" sizes="(min-width: 960px) 360px, 100vw" width="${w}" height="${h}" alt="${esc(text.imageAlt || t.card.posterAlt)}" loading="lazy" decoding="async">
     ${text.imageNote ? `<span class="sample-note">${esc(text.imageNote)}</span>` : ''}
-  </a>
+  </a>` : ''}
   <div class="card-body">
     <h3>${esc(text.name)}</h3>
     <p class="desc">${esc(text.desc)}</p>
     ${tags(p, text, t)}
-    ${installBlock(p, t, `<a class="link" href="${m}-1080.webp">${esc(viewFull)}</a>`)}
+    ${installBlock(p, t, p.image ? `<a class="link" href="${m}-1080.webp">${esc(viewFull)}</a>` : '')}
   </div>
 </article>`;
 }
