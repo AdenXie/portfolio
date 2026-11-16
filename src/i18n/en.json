@@ -174,6 +174,26 @@
       ],
       "imageAlt": "At dusk, a horizontal glass bottle holds a voxel sailing ship, a lighthouse and sunken treasure, with a telescope on the desk outside.",
       "requirements": "Requires a browser with WebGL support."
+    },
+    "rainyNightStore": {
+      "name": "Rainy Night Convenience Store",
+      "desc": "A miniature street corner floats in the dark. Amayado Mart lights up the wet crosswalk while a cat shelters under the awning.",
+      "highlights": [
+        "Turn up the rain to see denser streaks and stronger ripples in the puddles.",
+        "Switch off the shop lights and their reflections fade from the wet road. A lightning flash briefly lights up the whole street corner."
+      ],
+      "imageAlt": "Amayado Mart in the rain, with bright windows reflecting on wet pavement and layers of soil visible below the floating street corner.",
+      "requirements": "Requires a browser with WebGL support."
+    },
+    "pocketPlanet": {
+      "name": "3D Pocket Planet",
+      "desc": "Snowy mountains, a forest, a lake and a few houses dot this tiny world. Clouds and a hot-air balloon drift around it.",
+      "highlights": [
+        "The tower clock shows your local time. Slide into night and watch the streetlights and windows light up one by one.",
+        "Click the balloon to send it on a higher lap before it returns to its usual orbit."
+      ],
+      "imageAlt": "A low-poly planet against a deep blue sky, with a lake, a clock tower, houses along a path and a hot-air balloon overhead.",
+      "requirements": "Requires a browser with WebGL support."
     }
   },
   "writing": {

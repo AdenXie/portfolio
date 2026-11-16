@@ -8,7 +8,7 @@
 //   tool    — download and Source buttons, requirements note (no image)
 //   demo    — screenshot, interactive preview, and an optional prompt to copy
 
-import { atollJellyPrompt, bottledSeaPrompt } from './prompts.js';
+import { atollJellyPrompt, bottledSeaPrompt, rainyNightStorePrompt, pocketPlanetPrompt } from './prompts.js';
 
 export const site = {
   url: 'https://adenxie.com.cn',
@@ -119,6 +119,20 @@ export const projects = [
     url: '/demos/bottled-sea.html',
     image: '/media/screens/bottled-sea.webp',
     prompt: bottledSeaPrompt,
+  },
+  {
+    id: 'rainyNightStore',
+    category: 'vibeCoding',
+    url: '/demos/rainy-night-store.html',
+    image: '/media/screens/rainy-night-store.webp',
+    prompt: rainyNightStorePrompt,
+  },
+  {
+    id: 'pocketPlanet',
+    category: 'vibeCoding',
+    url: '/demos/pocket-planet.html',
+    image: '/media/screens/pocket-planet.webp',
+    prompt: pocketPlanetPrompt,
   },
 ];
 

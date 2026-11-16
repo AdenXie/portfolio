@@ -20,3 +20,6 @@ Third-party tools used at development time keep their own licenses:
 - Vite, MIT License
 - Playwright (playwright-core), Apache License 2.0
 - sharp, Apache License 2.0
+
+The rainy-night-store and pocket-planet demos bundle three.js r170.
+Its MIT license is included in public/demos/three-license.txt.
