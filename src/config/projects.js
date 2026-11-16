@@ -6,6 +6,9 @@
 //   skill   — install command, Source link; example image optional
 //   plugin  — install command, Source and package links (no image)
 //   tool    — download and Source buttons, requirements note (no image)
+//   demo    — screenshot, interactive preview, and an optional prompt to copy
+
+import { atollJellyPrompt, bottledSeaPrompt } from './prompts.js';
 
 export const site = {
   url: 'https://adenxie.com.cn',
@@ -20,6 +23,7 @@ export const categories = [
   { id: 'desktopTools', layout: 'tool' },
   { id: 'skills', layout: 'skill' },
   { id: 'harnessPlugins', layout: 'plugin' },
+  { id: 'vibeCoding', layout: 'demo' },
 ];
 
 export const projects = [
@@ -101,6 +105,20 @@ export const projects = [
       { label: 'Desktop (PowerShell)', command: "$DshCli = Join-Path $env:LOCALAPPDATA 'Programs\\DeepSeek Harness\\resources\\runtime\\cli\\bin\\dsh.cmd'\n& $DshCli plugin --profile desktop add '@adenxie/dsh-vercel@0.3.1'" },
       { label: 'Web', command: 'dsh plugin --profile web add @adenxie/dsh-vercel@0.3.1' },
     ],
+  },
+  {
+    id: 'atollJelly',
+    category: 'vibeCoding',
+    url: '/demos/atoll-jelly.html',
+    image: '/media/screens/atoll-jelly.webp',
+    prompt: atollJellyPrompt,
+  },
+  {
+    id: 'bottledSea',
+    category: 'vibeCoding',
+    url: '/demos/bottled-sea.html',
+    image: '/media/screens/bottled-sea.webp',
+    prompt: bottledSeaPrompt,
   },
 ];
 

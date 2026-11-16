@@ -1,0 +1,2827 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>瓶中沧海 · 体素微缩航海场景 (Three.js r160)</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg-core: #140f0c;
+    --ink: #f5e7ce;
+    --ink-secondary: #cbb493;
+    --ink-muted: #988062;
+    --brass: #dfa95b;
+    --brass-bright: #ffe1a8;
+    --brass-line: rgba(223, 169, 91, 0.26);
+    --surface-glass: rgba(28, 20, 15, 0.78);
+    --surface-hover: rgba(68, 48, 33, 0.86);
+    --storm-cyan: #8ce7ff;
+    --storm-surface: rgba(22, 49, 64, 0.88);
+    --serif: "Songti SC", "Noto Serif SC", "STSong", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    --mono: "JetBrains Mono", "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  ::selection {
+    background: rgba(223, 169, 91, 0.32);
+    color: var(--brass-bright);
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-core);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Dynamic room atmosphere backdrop that shifts across Dawn, Noon, Dusk, Midnight & Storm */
+  #room-backdrop {
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 68% 58% at 36% 32%, rgba(132, 82, 46, 0.72) 0%, rgba(56, 36, 26, 0.85) 48%, rgba(16, 13, 14, 0.98) 100%);
+    transition: filter 0.45s ease, background 0.6s ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #gl-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: grab;
+    touch-action: none;
+    outline: none;
+    z-index: 1;
+  }
+
+  #gl-canvas.dragging {
+    cursor: grabbing;
+  }
+
+  #gl-canvas:focus-visible {
+    outline: 2px solid var(--brass);
+    outline-offset: -4px;
+  }
+
+  /* Decorative nautical chart hairlines */
+  .chart-border {
+    position: fixed;
+    inset: 20px;
+    border: 1px solid var(--brass-line);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .chart-border::before,
+  .chart-border::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: var(--brass);
+    border-style: solid;
+  }
+
+  .chart-border::before {
+    top: -1px;
+    left: -1px;
+    border-width: 2px 0 0 2px;
+  }
+
+  .chart-border::after {
+    bottom: -1px;
+    right: -1px;
+    border-width: 0 2px 2px 0;
+  }
+
+  /* Top-left title block — no eyebrow above h1 per craft floor */
+  .brand-header {
+    position: fixed;
+    top: clamp(32px, 5vh, 56px);
+    left: clamp(34px, 4.5vw, 68px);
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .brand-header h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(30px, 3.8vw, 52px);
+    line-height: 1.08;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    text-shadow: 0 6px 28px rgba(10, 6, 4, 0.78);
+  }
+
+  .brand-subtitle {
+    margin-top: 8px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    letter-spacing: 0.14em;
+    color: var(--ink-secondary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .brand-subtitle span.sep {
+    display: inline-block;
+    width: 18px;
+    height: 1px;
+    background: var(--brass);
+    opacity: 0.65;
+  }
+
+  /* Top-right celestial chronometer & FPS telemetry */
+  .chronometer {
+    position: fixed;
+    top: clamp(32px, 5vh, 56px);
+    right: clamp(34px, 4.5vw, 68px);
+    z-index: 3;
+    text-align: right;
+    pointer-events: none;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chrono-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  #phase-badge {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    color: var(--brass);
+  }
+
+  #clock-readout {
+    font-family: var(--mono);
+    font-size: clamp(24px, 2.8vw, 38px);
+    font-weight: 500;
+    line-height: 1.1;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.65);
+  }
+
+  .phase-track {
+    margin-top: 8px;
+    margin-left: auto;
+    width: 148px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--brass-line);
+  }
+
+  .phase-step {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+    text-align: center;
+    padding-top: 4px;
+    position: relative;
+    transition: color 0.25s ease;
+  }
+
+  .phase-step::before {
+    content: "";
+    position: absolute;
+    top: -3.5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #6c5740;
+    transition: background 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .phase-step.active {
+    color: var(--brass-bright);
+  }
+
+  .phase-step.active::before {
+    background: var(--brass-bright);
+    box-shadow: 0 0 8px 2px rgba(255, 214, 133, 0.72);
+  }
+
+  .telemetry-bar {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.06em;
+  }
+
+  /* Bottom interactive HUD bar */
+  .hud-footer {
+    position: fixed;
+    bottom: clamp(28px, 4.5vh, 48px);
+    left: clamp(34px, 4.5vw, 68px);
+    right: clamp(34px, 4.5vw, 68px);
+    z-index: 3;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    pointer-events: none;
+  }
+
+  .controls-left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .interaction-hint {
+    font-size: 12px;
+    color: var(--ink-secondary);
+    letter-spacing: 0.08em;
+    background: var(--surface-glass);
+    border: 1px solid var(--brass-line);
+    border-radius: 8px;
+    padding: 8px 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.36);
+  }
+
+  .interaction-hint svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--brass);
+    fill: none;
+    stroke-width: 1.6;
+    flex-shrink: 0;
+  }
+
+  .hud-btn {
+    pointer-events: auto;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 12.5px;
+    color: var(--ink);
+    background: var(--surface-glass);
+    border: 1px solid var(--brass-line);
+    border-radius: 8px;
+    padding: 8px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease, color 0.18s ease;
+    touch-action: none;
+  }
+
+  .hud-btn:hover {
+    background: var(--surface-hover);
+    border-color: rgba(223, 169, 91, 0.55);
+  }
+
+  .hud-btn:active {
+    transform: translateY(1px);
+  }
+
+  .hud-btn:focus-visible {
+    outline: 2px solid var(--brass-bright);
+    outline-offset: 2px;
+  }
+
+  .hud-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .hud-btn kbd {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(223, 169, 91, 0.42);
+    background: rgba(15, 10, 7, 0.55);
+    color: var(--brass-bright);
+  }
+
+  #storm-btn[aria-pressed="true"] {
+    background: var(--storm-surface);
+    border-color: var(--storm-cyan);
+    color: #e3f9ff;
+    box-shadow: 0 0 22px rgba(102, 217, 255, 0.32), 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  #storm-btn[aria-pressed="true"] kbd {
+    border-color: var(--storm-cyan);
+    color: var(--storm-cyan);
+  }
+
+  /* Time-lapse speed selector */
+  .timelapse-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .timelapse-label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--ink-secondary);
+  }
+
+  .speed-group {
+    pointer-events: auto;
+    display: inline-flex;
+    background: var(--surface-glass);
+    border: 1px solid var(--brass-line);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
+  }
+
+  .speed-btn {
+    cursor: pointer;
+    border: 0;
+    background: transparent;
+    color: var(--ink-secondary);
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+    padding: 8px 13px;
+    min-width: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.16s ease, color 0.16s ease;
+  }
+
+  .speed-btn + .speed-btn {
+    border-left: 1px solid var(--brass-line);
+  }
+
+  .speed-btn:hover {
+    background: var(--surface-hover);
+    color: var(--ink);
+  }
+
+  .speed-btn[aria-pressed="true"] {
+    background: var(--brass);
+    color: #1d130b;
+    font-weight: 600;
+  }
+
+  .speed-btn:focus-visible {
+    outline: 2px solid var(--brass-bright);
+    outline-offset: -2px;
+  }
+
+  #status-banner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    background: rgba(26, 19, 14, 0.92);
+    border: 1px solid var(--brass-line);
+    border-radius: 10px;
+    padding: 16px 24px;
+    color: var(--ink);
+    font-size: 13.5px;
+    letter-spacing: 0.08em;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  #status-banner[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 720px) {
+    .chart-border { inset: 10px; }
+    .brand-header { top: 22px; left: 22px; }
+    .chronometer { top: 22px; right: 22px; }
+    .phase-track { width: 120px; }
+    .hud-footer {
+      left: 22px;
+      right: 22px;
+      bottom: 20px;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .controls-left {
+      justify-content: space-between;
+    }
+    .timelapse-panel {
+      align-items: flex-end;
+    }
+  }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+</head>
+<body>
+  <div id="room-backdrop" aria-hidden="true"></div>
+  <canvas id="gl-canvas" tabindex="0" aria-label="瓶中沧海三维体素微缩互动场景"></canvas>
+  <div class="chart-border" aria-hidden="true"></div>
+
+  <header class="brand-header">
+    <h1>瓶中沧海</h1>
+    <div class="brand-subtitle">
+      <span>体素微缩航海志</span>
+      <span class="sep" aria-hidden="true"></span>
+      <span lang="la">MARE IN LAGOENA</span>
+    </div>
+  </header>
+
+  <aside class="chronometer" aria-label="昼夜时辰与帧率">
+    <div class="chrono-row">
+      <span id="phase-badge">黄昏</span>
+      <time id="clock-readout" datetime="17:45">17:45</time>
+    </div>
+    <div class="phase-track" aria-hidden="true">
+      <span class="phase-step" data-phase="0">黎明</span>
+      <span class="phase-step" data-phase="1">正午</span>
+      <span class="phase-step active" data-phase="2">黄昏</span>
+      <span class="phase-step" data-phase="3">子夜</span>
+    </div>
+    <div class="telemetry-bar"><span id="fps-readout">60 FPS</span> · INSTANCED VOXEL</div>
+  </aside>
+
+  <footer class="hud-footer">
+    <div class="controls-left">
+      <div class="interaction-hint">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M12 3v4M12 17v4M3 12h4M17 12h4"></path>
+        </svg>
+        <span>拖动环视 · 滚轮缩放（闲置自动巡航）</span>
+      </div>
+      <button id="storm-btn" class="hud-btn" type="button" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"></path>
+        </svg>
+        <kbd>Space</kbd>
+        <span>按住掀起风暴</span>
+      </button>
+    </div>
+
+    <div class="timelapse-panel">
+      <span class="timelapse-label">延时摄影 · 昼夜流转</span>
+      <div class="speed-group" role="group" aria-label="延时摄影倍速选择">
+        <button type="button" class="speed-btn" data-rate="0" aria-pressed="false" aria-label="暂停昼夜流转">暂停</button>
+        <button type="button" class="speed-btn" data-rate="1" aria-pressed="true" aria-label="1倍速">×1</button>
+        <button type="button" class="speed-btn" data-rate="4" aria-pressed="false" aria-label="4倍速">×4</button>
+        <button type="button" class="speed-btn" data-rate="12" aria-pressed="false" aria-label="12倍速">×12</button>
+      </div>
+    </div>
+  </footer>
+
+  <div id="status-banner" role="status">正在构筑瓶中沧海体素微缩世界…</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+const statusBanner = document.getElementById('status-banner');
+
+try {
+  initBottledSea();
+} catch (err) {
+  console.error(err);
+  statusBanner.textContent = '场景初始化失败，请确认浏览器已开启 WebGL 支持。';
+  statusBanner.hidden = false;
+}
+
+function initBottledSea() {
+  const canvas = document.getElementById('gl-canvas');
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    alpha: true,
+    antialias: true,
+    powerPreference: 'high-performance'
+  });
+  renderer.setClearColor(0x000000, 0);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.24;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(32, window.innerWidth / window.innerHeight, 0.1, 160);
+
+  // ============================================================================
+  // 1. DETERMINISTIC PRNG & MATH HELPERS
+  // ============================================================================
+  const TAU = Math.PI * 2;
+  const { sin, cos, sqrt, abs, atan2, floor, ceil, max, min, pow, exp } = Math;
+  const clamp = THREE.MathUtils.clamp;
+  const lerp = THREE.MathUtils.lerp;
+  const smoothstep = THREE.MathUtils.smoothstep;
+
+  let rngState = 20261116;
+  function rand() {
+    rngState = (Math.imul(rngState, 1664525) + 1013904223) >>> 0;
+    return rngState / 4294967296;
+  }
+  const randRange = (a, b) => lerp(a, b, rand());
+  const pick = (arr) => arr[floor(rand() * arr.length)];
+
+  // ============================================================================
+  // 2. HIERARCHY: ROCKING BOTTLE SHELL vs LEVEL HORIZONTAL OCEAN WORLD
+  // ============================================================================
+  // Center of the horizontal bottle sits at Y = 3.12 above the wooden desk (Y = 0)
+  const BOTTLE_CENTER_Y = 3.12;
+  const SEA_LEVEL = -0.48; // Local to bottle/ocean center
+
+  const bottleShellGroup = new THREE.Group();
+  const oceanWorldGroup = new THREE.Group();
+  bottleShellGroup.position.y = BOTTLE_CENTER_Y;
+  oceanWorldGroup.position.y = BOTTLE_CENTER_Y;
+  scene.add(bottleShellGroup, oceanWorldGroup);
+
+  // Shared reactive uniforms for all custom shaders & clipped materials
+  const uInvBottle = { value: new THREE.Matrix4() };
+  const uTime = { value: 0 };
+  const uStorm = { value: 0 };
+  const uDaylight = { value: 0.85 };
+  const uNight = { value: 0.22 };
+  const uFlash = { value: 0 };
+  const uSunDir = { value: new THREE.Vector3(-0.6, 0.7, 0.4).normalize() };
+
+  const sharedUniforms = {
+    invBottle: uInvBottle,
+    uTime,
+    uStorm,
+    uDaylight,
+    uNight,
+    uFlash,
+    uSunDir
+  };
+
+  // ============================================================================
+  // 3. AXISYMMETRIC BOTTLE PROFILE & STRICT GPU/CPU BOUNDARY CLIPPING
+  // ============================================================================
+  // Profile pairs: [x, radius] from bottom punt (-6.35) to bottle lip (+6.58)
+  const bottleProfile = [
+    [-6.35, 0.00],
+    [-6.32, 0.86],
+    [-6.27, 1.62],
+    [-6.17, 2.08],
+    [-6.00, 2.36],
+    [-5.76, 2.50],
+    [-5.42, 2.56],
+    [-4.95, 2.58],
+    [ 2.65, 2.58],
+    [ 3.12, 2.54],
+    [ 3.52, 2.42],
+    [ 3.90, 2.18],
+    [ 4.26, 1.82],
+    [ 4.62, 1.38],
+    [ 4.94, 1.02],
+    [ 5.20, 0.82],
+    [ 5.45, 0.74],
+    [ 6.56, 0.74],
+    [ 6.56, 0.66],
+    [ 6.42, 0.59],
+    [ 6.42, 0.00]
+  ];
+
+  const innerSegments = bottleProfile.slice(0, 18);
+  const f5 = (n) => n.toFixed(5);
+
+  function getBottleRadiusCPU(x) {
+    if (x <= innerSegments[0][0]) return 0;
+    for (let i = 1; i < innerSegments.length; i++) {
+      const [x1, r1] = innerSegments[i];
+      if (x < x1) {
+        const [x0, r0] = innerSegments[i - 1];
+        return lerp(r0, r1, clamp((x - x0) / (x1 - x0), 0, 1));
+      }
+    }
+    return 0.74;
+  }
+
+  const bottleClipGLSL = `
+    uniform mat4 invBottle;
+    float bottleRadiusAt(float x) {
+      ${innerSegments.slice(1).map(([x, r], i) => {
+        const [x0, r0] = innerSegments[i];
+        return `if (x < ${f5(x)}) return mix(${f5(r0)}, ${f5(r)}, clamp((x - (${f5(x0)})) / ${f5(x - x0)}, 0.0, 1.0));`;
+      }).join('\n      ')}
+      return 0.74;
+    }
+    bool isOutsideBottle(vec3 worldPos, float inset) {
+      vec3 p = (invBottle * vec4(worldPos, 1.0)).xyz;
+      if (p.x < -6.32 + inset || p.x > 6.22 - inset) return true;
+      float rMax = bottleRadiusAt(p.x) - inset;
+      return dot(p.yz, p.yz) > rMax * rMax;
+    }
+  `;
+
+  // ============================================================================
+  // 4. ANALYTICAL GPU/CPU COUPLED MULTI-OCTAVE WAVE FIELD
+  // ============================================================================
+  // 4 directional wave components: [kx, kz, omega, calmAmp, stormAmp]
+  const WAVE_COMPONENTS = [
+    [ 1.82,  0.88, -1.90, 0.064, 0.112],
+    [ 0.74, -2.68,  2.12, 0.046, 0.098],
+    [ 3.65,  1.54, -3.20, 0.026, 0.064],
+    [-2.45,  2.15,  2.65, 0.018, 0.048]
+  ];
+
+  function getWaveHeightCPU(x, z, t = uTime.value, storm = uStorm.value) {
+    let h = SEA_LEVEL;
+    for (let i = 0; i < WAVE_COMPONENTS.length; i++) {
+      const [kx, kz, omega, aCalm, aStorm] = WAVE_COMPONENTS[i];
+      h += sin(kx * x + kz * z + omega * t) * (aCalm + aStorm * storm);
+    }
+    return h;
+  }
+
+  const waveFunctionGLSL = `
+    uniform float uTime;
+    uniform float uStorm;
+    float evalWave(vec2 xz) {
+      return ${f5(SEA_LEVEL)}
+        ${WAVE_COMPONENTS.map(([kx, kz, w, a, b]) =>
+          `+ sin(dot(xz, vec2(${f5(kx)}, ${f5(kz)})) + (${f5(w)}) * uTime) * (${f5(a)} + ${f5(b)} * uStorm)`
+        ).join('\n        ')};
+    }
+  `;
+
+  // ============================================================================
+  // 5. VOXEL INSTANCED MESH ENGINE WITH MICRO-BEVEL SHADING & BOTTLE CLIPPING
+  // ============================================================================
+  const unitBoxGeo = new THREE.BoxGeometry(1, 1, 1);
+  const tempObj = new THREE.Object3D();
+  const tempColor = new THREE.Color();
+
+  function makeClippedVoxelMaterial(params, withBevel = true) {
+    const mat = new THREE.MeshStandardMaterial(params);
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.invBottle = uInvBottle;
+      shader.vertexShader = `
+        varying vec3 vHullWorld;
+        varying vec3 vBoxLocal;
+      ` + shader.vertexShader.replace(
+        '#include <project_vertex>',
+        `
+        vBoxLocal = position;
+        vec4 hullPos = vec4(transformed, 1.0);
+        #ifdef USE_INSTANCING
+          hullPos = instanceMatrix * hullPos;
+        #endif
+        vHullWorld = (modelMatrix * hullPos).xyz;
+        #include <project_vertex>
+        `
+      );
+      shader.fragmentShader = bottleClipGLSL + `
+        varying vec3 vHullWorld;
+        varying vec3 vBoxLocal;
+      ` + shader.fragmentShader.replace(
+        '#include <clipping_planes_fragment>',
+        `
+        #include <clipping_planes_fragment>
+        if (isOutsideBottle(vHullWorld, 0.028)) discard;
+        `
+      ).replace(
+        '#include <dithering_fragment>',
+        withBevel ? `
+        vec3 bAbs = abs(vBoxLocal);
+        float edgePair = max(min(bAbs.x, bAbs.y), min(max(bAbs.x, bAbs.y), bAbs.z));
+        float bevel = smoothstep(0.42, 0.495, edgePair);
+        gl_FragColor.rgb *= mix(1.0, 0.88, bevel);
+        gl_FragColor.rgb *= (0.94 + 0.09 * (vBoxLocal.y + 0.5));
+        #include <dithering_fragment>
+        ` : '#include <dithering_fragment>'
+      );
+    };
+    return mat;
+  }
+
+  const voxelSolidMat = makeClippedVoxelMaterial({ roughness: 0.72, metalness: 0.06 }, true);
+  const voxelFabricMat = makeClippedVoxelMaterial({ roughness: 0.90, metalness: 0.02 }, true);
+  const voxelWindowMat = makeClippedVoxelMaterial({
+    color: 0xffe29a,
+    emissive: 0xff8f26,
+    emissiveIntensity: 1.65,
+    roughness: 0.38
+  }, false);
+  const deskVoxelMat = new THREE.MeshStandardMaterial({ roughness: 0.62, metalness: 0.12 });
+
+  const addVox = (list, x, y, z, w, h, d, hex, ry = 0, rx = 0, rz = 0) => {
+    list.push([x, y, z, w, h, d, hex, ry, rx, rz]);
+  };
+
+  function setInstancePose(instMesh, idx, x, y, z, w, h, d, ry = 0, rx = 0, rz = 0) {
+    tempObj.position.set(x, y, z);
+    tempObj.rotation.set(rx, ry, rz);
+    tempObj.scale.set(w, h, d);
+    tempObj.updateMatrix();
+    instMesh.setMatrixAt(idx, tempObj.matrix);
+  }
+
+  function buildVoxelBatch(parent, list, mat = voxelSolidMat) {
+    const inst = new THREE.InstancedMesh(unitBoxGeo, mat, list.length);
+    for (let i = 0; i < list.length; i++) {
+      const [x, y, z, w, h, d, hex, ry, rx, rz] = list[i];
+      setInstancePose(inst, i, x, y, z, w, h, d, ry, rx, rz);
+      inst.setColorAt(i, tempColor.setHex(hex));
+    }
+    inst.instanceMatrix.needsUpdate = true;
+    if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+    parent.add(inst);
+    return inst;
+  }
+
+  function addSubGroup(parent, x = 0, y = 0, z = 0) {
+    const g = new THREE.Group();
+    g.position.set(x, y, z);
+    parent.add(g);
+    return g;
+  }
+
+  function addMesh(parent, geo, mat, x = 0, y = 0, z = 0) {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x, y, z);
+    parent.add(m);
+    return m;
+  }
+
+  function addCylinderX(parent, x, y, z, len, rLeft, rRight, mat) {
+    const m = addMesh(parent, new THREE.CylinderGeometry(rRight, rLeft, len, 36), mat, x, y, z);
+    m.rotation.z = -Math.PI / 2;
+    return m;
+  }
+
+  function addRingX(parent, x, r, tubeR, mat) {
+    const m = addMesh(parent, new THREE.TorusGeometry(r, tubeR, 10, 72), mat, x, 0, 0);
+    m.rotation.y = Math.PI / 2;
+    return m;
+  }
+
+  function addCurveTube(parent, pts, r, mat) {
+    const curve = new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p)));
+    return addMesh(parent, new THREE.TubeGeometry(curve, pts.length * 4, r, 7, false), mat);
+  }
+
+  // ============================================================================
+  // 6. GLASS BOTTLE SHADER (FRESNEL RIM, SPECULAR RIBBONS, DUSK TINT)
+  // ============================================================================
+  const bottleLatheGeo = new THREE.LatheGeometry(
+    bottleProfile.map(([x, r]) => new THREE.Vector2(r, x)),
+    88
+  );
+  bottleLatheGeo.rotateZ(-Math.PI / 2);
+
+  const glassShaderMat = new THREE.ShaderMaterial({
+    uniforms: sharedUniforms,
+    transparent: true,
+    depthWrite: false,
+    vertexShader: `
+      varying vec3 vWorldPos;
+      varying vec3 vLocalPos;
+      varying vec3 vWorldNorm;
+      void main() {
+        vLocalPos = position;
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vWorldPos = wp.xyz;
+        vWorldNorm = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * viewMatrix * wp;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vWorldPos;
+      varying vec3 vLocalPos;
+      varying vec3 vWorldNorm;
+      uniform float uDaylight;
+      uniform float uNight;
+      uniform float uFlash;
+      uniform vec3 uSunDir;
+      void main() {
+        vec3 N = normalize(vWorldNorm);
+        vec3 V = normalize(cameraPosition - vWorldPos);
+        float ndotv = max(dot(N, V), 0.0);
+        float fresnel = pow(1.0 - ndotv, 3.35);
+
+        vec3 R = reflect(-V, N);
+        float endMask = 1.0 - 0.48 * abs(N.x);
+
+        // Dual studio/window reflection ribbons along the horizontal barrel
+        float primaryRibbon = exp(-abs(R.y - 0.72) * 19.0) * smoothstep(-0.05, 0.68, R.z);
+        float secondaryRibbon = exp(-abs(R.y - 0.86) * 58.0) * smoothstep(-0.48, 0.42, R.z);
+        float topCrest = exp(-pow((vLocalPos.y - 2.38) / 0.13, 2.0)) * smoothstep(0.25, 1.0, vLocalPos.z) * 0.44;
+        float sunSpec = pow(max(dot(R, uSunDir), 0.0), 28.0);
+
+        float specTotal = (primaryRibbon * 0.25 + secondaryRibbon * 0.21 + sunSpec * 0.28 + topCrest) * endMask;
+
+        // Subtle blown-glass concentric striation
+        float striae = pow(max(0.0, sin(vLocalPos.x * 112.0 + vLocalPos.y * 8.0)), 80.0) * 0.038 * fresnel;
+
+        // Sea-glass emerald-teal edge shifting toward warm amber-gold speculars
+        vec3 glassBase = mix(vec3(0.13, 0.49, 0.53), vec3(1.0, 0.88, 0.72), clamp(specTotal * 3.8, 0.0, 0.90));
+        float upperAir = smoothstep(-0.20, 0.65, vLocalPos.y);
+        float nightTintWeight = upperAir * uNight * 0.20;
+
+        float baseAlpha = 0.022 + fresnel * 0.54 + specTotal + striae;
+        float alpha = clamp(baseAlpha + nightTintWeight, 0.0, 0.73);
+
+        vec3 finalColor = mix(
+          glassBase * (0.70 + uDaylight * 0.26),
+          vec3(0.025, 0.065, 0.16),
+          nightTintWeight / max(alpha, 0.02)
+        );
+        finalColor += vec3(0.75, 0.90, 1.0) * (uFlash * 0.36);
+
+        gl_FragColor = vec4(finalColor, alpha);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }
+    `
+  });
+
+  const glassBottleMesh = addMesh(bottleShellGroup, bottleLatheGeo, glassShaderMat);
+  glassBottleMesh.renderOrder = 14;
+
+  // Decorative thick glass neck rings for authentic antique bottle silhouette
+  const glassRibMat = new THREE.MeshStandardMaterial({
+    color: 0x7fd4d2,
+    transparent: true,
+    opacity: 0.28,
+    roughness: 0.12,
+    metalness: 0.1
+  });
+  addRingX(bottleShellGroup, 6.48, 0.77, 0.042, glassRibMat);
+  addRingX(bottleShellGroup, 6.24, 0.75, 0.028, glassRibMat);
+
+  // ============================================================================
+  // 7. TRANSLUCENT DEEP WATER VOLUME (NO SEABED, SEE-THROUGH GRADIENT + CAUSTICS)
+  // ============================================================================
+  const deepWaterVolumeMat = new THREE.ShaderMaterial({
+    uniforms: sharedUniforms,
+    transparent: true,
+    depthWrite: false,
+    vertexShader: `
+      varying vec3 vWorldPos;
+      varying vec3 vWorldNorm;
+      void main() {
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vWorldPos = wp.xyz;
+        vWorldNorm = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * viewMatrix * wp;
+      }
+    `,
+    fragmentShader: bottleClipGLSL + waveFunctionGLSL + `
+      varying vec3 vWorldPos;
+      varying vec3 vWorldNorm;
+      uniform float uDaylight;
+      uniform float uNight;
+      uniform float uFlash;
+      void main() {
+        float localY = vWorldPos.y - ${f5(BOTTLE_CENTER_Y)};
+        float surfY = evalWave(vWorldPos.xz);
+        float depth = surfY - localY;
+        vec3 bLocal = (invBottle * vec4(vWorldPos, 1.0)).xyz;
+        if (depth < 0.0 || bLocal.x > 6.22) discard;
+
+        float depthNorm = smoothstep(0.0, 2.15, depth);
+        // Gradient from luminous tropical cyan-teal at top to deep abyssal sapphire-indigo at bottom
+        vec3 shallowColor = vec3(0.02, 0.52, 0.46);
+        vec3 abyssColor   = vec3(0.005, 0.075, 0.165);
+        vec3 waterCol = mix(shallowColor, abyssColor, depthNorm);
+
+        // Animated underwater caustic web
+        float c1 = sin(vWorldPos.x * 29.0 + sin(vWorldPos.y * 23.0) + uTime * 1.25);
+        float c2 = sin(vWorldPos.z * 34.0 + vWorldPos.y * 19.0 - uTime * 0.95);
+        float caustic = pow(max(c1 * c2, 0.0), 4.5) * (1.0 - depthNorm);
+        waterCol += vec3(0.09, 0.22, 0.18) * caustic * 0.32;
+
+        // Warm golden subsurface glow around the sunken treasure chest at (-1.55, -1.82, 0.82)
+        vec3 chestPos = vec3(-1.55, ${f5(BOTTLE_CENTER_Y - 1.72)}, 0.85);
+        float distChest = length(vWorldPos - chestPos);
+        float chestGlow = exp(-distChest * 1.45) * (0.28 + uNight * 0.42);
+        waterCol += vec3(1.0, 0.68, 0.18) * chestGlow;
+
+        // Bright turquoise meniscus line where water kisses the glass bottle wall
+        float meniscus = exp(-depth * 42.0);
+        waterCol = mix(waterCol, vec3(0.38, 1.0, 0.86), meniscus * 0.78);
+
+        vec3 V = normalize(cameraPosition - vWorldPos);
+        float fres = pow(1.0 - max(dot(normalize(vWorldNorm), V), 0.0), 2.1);
+
+        float alpha = gl_FrontFacing
+          ? (0.18 + 0.19 * depthNorm + 0.12 * fres + 0.40 * meniscus)
+          : (0.42 + 0.26 * depthNorm);
+
+        vec3 litWater = waterCol * (0.48 + uDaylight * 0.50) + vec3(0.55, 0.75, 0.95) * (uFlash * 0.15);
+        gl_FragColor = vec4(litWater, alpha);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }
+    `
+  });
+
+  const frontWaterBody = addMesh(bottleShellGroup, bottleLatheGeo, deepWaterVolumeMat);
+  frontWaterBody.renderOrder = 7;
+
+  const backWaterVolumeMat = deepWaterVolumeMat.clone();
+  backWaterVolumeMat.uniforms = sharedUniforms;
+  backWaterVolumeMat.side = THREE.BackSide;
+  const backWaterBody = addMesh(bottleShellGroup, bottleLatheGeo, backWaterVolumeMat);
+  backWaterBody.renderOrder = 2;
+
+  // ============================================================================
+  // 8. GPU-DISPLACED VOXEL WAVE SURFACE WITH FOAM WHITECAPS
+  // ============================================================================
+  const voxelWaterSurfaceMat = new THREE.ShaderMaterial({
+    uniforms: sharedUniforms,
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    forceSinglePass: true,
+    vertexShader: waveFunctionGLSL + `
+      varying vec3 vWorldPos;
+      varying vec3 vFaceNormal;
+      varying vec2 vCellXZ;
+      varying float vWaveH;
+      void main() {
+        vec4 instPos = instanceMatrix * vec4(position, 1.0);
+        vCellXZ = instanceMatrix[3].xz;
+        vWaveH = evalWave(vCellXZ);
+        instPos.y += vWaveH;
+        vec4 wp = modelMatrix * instPos;
+        vWorldPos = wp.xyz;
+        vFaceNormal = normal;
+        gl_Position = projectionMatrix * viewMatrix * wp;
+      }
+    `,
+    fragmentShader: bottleClipGLSL + waveFunctionGLSL + `
+      varying vec3 vWorldPos;
+      varying vec3 vFaceNormal;
+      varying vec2 vCellXZ;
+      varying float vWaveH;
+      uniform float uDaylight;
+      uniform float uNight;
+      uniform float uFlash;
+      uniform vec3 uSunDir;
+      void main() {
+        if (isOutsideBottle(vWorldPos, 0.036)) discard;
+
+        float elev = vWaveH - (${f5(SEA_LEVEL)});
+        float dx = (evalWave(vCellXZ + vec2(0.065, 0.0)) - vWaveH) / 0.065;
+        float dz = (evalWave(vCellXZ + vec2(0.0, 0.065)) - vWaveH) / 0.065;
+        vec3 N = normalize(vec3(-dx, 1.0, -dz));
+        vec3 V = normalize(cameraPosition - vWorldPos);
+        float spec = pow(max(dot(reflect(-V, N), uSunDir), 0.0), 15.0);
+
+        // Per-voxel deterministic hash for organic voxel whitecap breakup
+        float cellHash = fract(sin(dot(vCellXZ, vec2(71.13, 93.47))) * 4721.63);
+
+        // Island shoreline surf ring around (1.62, -0.15)
+        vec2 dIsland = (vCellXZ - vec2(1.62, -0.15)) / vec2(1.36, 0.94);
+        float islandDist = length(dIsland);
+        float shoreSurf = smoothstep(1.32, 0.96, islandDist) * smoothstep(0.65, 0.98, islandDist) * (0.45 + 0.35 * sin(uTime * 3.2 - islandDist * 9.0));
+
+        float crestFoam = smoothstep(0.078 + uStorm * 0.095, 0.125 + uStorm * 0.175, elev)
+                        * smoothstep(0.36, 0.86, cellHash + uStorm * 0.25);
+        float foam = clamp(max(crestFoam, shoreSurf * (0.55 + 0.45 * cellHash)), 0.0, 1.0);
+
+        vec3 seaTint = mix(
+          vec3(0.015, 0.34, 0.37),
+          vec3(0.08, 0.84, 0.69),
+          clamp(0.42 + 2.15 * elev + cellHash * 0.28, 0.0, 1.0)
+        );
+        seaTint = mix(seaTint, vec3(0.84, 1.0, 0.94), max(foam * 0.95, spec * 0.62));
+
+        // Voxel cube face shading
+        seaTint *= mix(0.72, 1.0, abs(vFaceNormal.y));
+
+        // Warm lighthouse beam & cottage reflection on night waves
+        vec3 litSea = seaTint * (0.30 + uDaylight * 0.70) + vec3(0.65, 0.85, 1.0) * (uFlash * 0.28);
+        float alpha = 0.52 + foam * 0.34 + spec * 0.09;
+
+        gl_FragColor = vec4(litSea, alpha);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }
+    `
+  });
+
+  const waterSurfaceVoxels = [];
+  const WATER_STEP = 0.142;
+  for (let x = -6.30; x <= 6.30; x += WATER_STEP) {
+    for (let z = -2.62; z <= 2.62; z += WATER_STEP) {
+      addVox(waterSurfaceVoxels, x, -0.042, z, WATER_STEP * 0.994, 0.084, WATER_STEP * 0.994, 0xffffff);
+    }
+  }
+  const waterSurfaceMesh = buildVoxelBatch(oceanWorldGroup, waterSurfaceVoxels, voxelWaterSurfaceMat);
+  waterSurfaceMesh.renderOrder = 6;
+  waterSurfaceMesh.frustumCulled = false;
+
+  // ============================================================================
+  // 9. ROOM LIGHTING & WOODEN DESK WITH STAND, VINTAGE BOOKS & BRASS SPYGLASS
+  // ============================================================================
+  const hemiLight = new THREE.HemisphereLight(0xffe6be, 0x245566, 1.42);
+  const sunKeyLight = new THREE.DirectionalLight(0xffcf9e, 3.25);
+  sunKeyLight.position.set(-5.2, 9.2, 5.2);
+  const rimBackLight = new THREE.DirectionalLight(0x82d6e8, 1.08);
+  rimBackLight.position.set(2.4, 4.2, -7.2);
+  const deskWarmBounce = new THREE.PointLight(0xff9e48, 32, 24, 2);
+  deskWarmBounce.position.set(-4.8, 4.1, 6.0);
+  scene.add(hemiLight, sunKeyLight, rimBackLight, deskWarmBounce);
+
+  // Procedural mahogany/walnut planked wood texture
+  function createPlankWoodTexture() {
+    const c = document.createElement('canvas');
+    c.width = 1024;
+    c.height = 512;
+    const ctx = c.getContext('2d');
+    const planks = 9;
+    const ph = 512 / planks;
+    for (let i = 0; i < planks; i++) {
+      const y0 = i * ph;
+      const baseTone = randRange(64, 96);
+      const grad = ctx.createLinearGradient(0, y0, 0, y0 + ph);
+      grad.addColorStop(0.0, `rgb(${baseTone + 6}, ${baseTone * 0.72}, ${baseTone * 0.49})`);
+      grad.addColorStop(0.55, `rgb(${baseTone + 18}, ${baseTone * 0.86}, ${baseTone * 0.58})`);
+      grad.addColorStop(1.0, `rgb(${baseTone - 8}, ${baseTone * 0.58}, ${baseTone * 0.38})`);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, y0, 1024, ph);
+      ctx.fillStyle = '#190b08';
+      ctx.fillRect(0, y0, 1024, 1.8);
+      ctx.fillStyle = 'rgba(195, 134, 84, 0.16)';
+      ctx.fillRect(0, y0 + 2, 1024, 1.3);
+    }
+    for (let i = 0; i < 1850; i++) {
+      const x = randRange(-160, 1024);
+      const y = randRange(0, 512);
+      const w = randRange(8, 230);
+      ctx.strokeStyle = i % 3 ? 'rgba(30, 14, 9, 0.14)' : 'rgba(228, 176, 115, 0.13)';
+      ctx.lineWidth = randRange(0.35, 1.35);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.bezierCurveTo(x + w * 0.3, y + randRange(-3, 3), x + w * 0.68, y + randRange(-3, 3), x + w, y + randRange(-1.6, 1.6));
+      ctx.stroke();
+    }
+    for (let i = 0; i < 14; i++) {
+      const kx = randRange(20, 990);
+      const ky = randRange(20, 490);
+      for (let j = 0; j < 8; j++) {
+        ctx.strokeStyle = j % 3 ? 'rgba(32, 15, 7, 0.16)' : 'rgba(214, 155, 102, 0.14)';
+        ctx.beginPath();
+        ctx.ellipse(kx, ky, 4 + j * 4.5, 1 + j * 0.65, -0.05, 0, TAU);
+        ctx.stroke();
+      }
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    return tex;
+  }
+
+  const deskWoodTex = createPlankWoodTexture();
+  const deskSurfaceMat = new THREE.MeshStandardMaterial({
+    map: deskWoodTex,
+    color: 0xc29570,
+    roughness: 0.72
+  });
+  addMesh(scene, new THREE.BoxGeometry(32, 0.56, 16.2), deskSurfaceMat, 0, -0.28, 2.5);
+
+  // Soft ambient occlusion shadow decals on the desk
+  const aoShadowTex = (() => {
+    const c = document.createElement('canvas');
+    c.width = c.height = 128;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(64, 64, 3, 64, 64, 62);
+    g.addColorStop(0.0, 'rgba(10, 6, 4, 0.90)');
+    g.addColorStop(0.58, 'rgba(18, 8, 6, 0.52)');
+    g.addColorStop(1.0, 'rgba(18, 8, 6, 0.0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 128, 128);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  })();
+
+  function addDeskShadow(x, z, w, d) {
+    const m = addMesh(
+      scene,
+      new THREE.PlaneGeometry(w, d),
+      new THREE.MeshBasicMaterial({ map: aoShadowTex, transparent: true, depthWrite: false, opacity: 0.86 }),
+      x, 0.003, z
+    );
+    m.rotation.x = -Math.PI / 2;
+  }
+  addDeskShadow(-0.75, 0.14, 16.2, 6.2);
+  addDeskShadow(-6.50, 1.48, 4.7, 3.6);
+  addDeskShadow(5.08, 2.65, 5.3, 2.2);
+
+  // Wooden bottle cradle stand (木托架) with brass nameplate
+  const standWoodTex = deskWoodTex.clone();
+  standWoodTex.repeat.set(0.82, 0.095);
+  standWoodTex.offset.set(0.1, 0.24);
+  standWoodTex.needsUpdate = true;
+
+  const cradleLightWood = new THREE.MeshStandardMaterial({ map: standWoodTex, color: 0xba8f67, roughness: 0.46 });
+  const cradleDarkWood  = new THREE.MeshStandardMaterial({ map: standWoodTex, color: 0x734d36, roughness: 0.58 });
+  const brassMetalMat   = new THREE.MeshStandardMaterial({ color: 0xb68944, metalness: 0.65, roughness: 0.30 });
+  const goldMetalMat    = new THREE.MeshStandardMaterial({ color: 0xe6b862, metalness: 0.52, roughness: 0.32 });
+
+  function addScaledBox(parent, x, y, z, w, h, d, mat) {
+    const m = addMesh(parent, unitBoxGeo, mat, x, y, z);
+    m.scale.set(w, h, d);
+    return m;
+  }
+
+  // Tiered plinth base
+  addScaledBox(scene, -0.68, 0.12, 0, 11.4, 0.24, 3.92, cradleDarkWood);
+  addScaledBox(scene, -0.68, 0.28, 0, 11.1, 0.10, 3.76, cradleLightWood);
+  addScaledBox(scene, -0.68, 0.37, 0, 10.8, 0.11, 3.58, cradleLightWood);
+
+  // Twin curved cradle arches holding the horizontal bottle barrel
+  for (const cradleX of [-4.52, 2.16]) {
+    const archShape = new THREE.Shape();
+    archShape.moveTo(-1.82, 0.36);
+    archShape.lineTo(1.82, 0.36);
+    archShape.lineTo(1.82, 1.26);
+    for (let i = 0; i <= 24; i++) {
+      const zz = 1.82 - (i * 3.64) / 24;
+      const saddleY = BOTTLE_CENTER_Y - sqrt(max(0.01, 2.58 * 2.58 - zz * zz)) - 0.035;
+      archShape.lineTo(zz, saddleY);
+    }
+    archShape.lineTo(-1.82, 1.26);
+    archShape.closePath();
+
+    const archGeo = new THREE.ExtrudeGeometry(archShape, {
+      depth: 0.42,
+      bevelEnabled: true,
+      bevelThickness: 0.045,
+      bevelSize: 0.042,
+      bevelSegments: 2,
+      steps: 1
+    });
+    const archMesh = addMesh(scene, archGeo, cradleLightWood, cradleX - 0.21, 0, 0);
+    archMesh.rotation.y = Math.PI / 2;
+
+    // Brass brackets & rivets on each cradle support
+    for (const sideZ of [-1.80, 1.80]) {
+      addScaledBox(scene, cradleX, 0.78, sideZ, 0.50, 0.55, 0.05, cradleDarkWood);
+      const rivet = addMesh(scene, new THREE.CylinderGeometry(0.058, 0.058, 0.024, 14), brassMetalMat, cradleX, 0.74, sideZ * 1.025);
+      rivet.rotation.x = Math.PI / 2;
+    }
+  }
+
+  // Engraved brass plaque on the front of the cradle base
+  const plaqueBase = addScaledBox(scene, -0.68, 0.155, 1.97, 2.42, 0.19, 0.03, brassMetalMat);
+  const plaqueCanvas = document.createElement('canvas');
+  plaqueCanvas.width = 512;
+  plaqueCanvas.height = 84;
+  const pCtx = plaqueCanvas.getContext('2d');
+  pCtx.fillStyle = '#aa723f';
+  pCtx.fillRect(0, 0, 512, 84);
+  pCtx.strokeStyle = '#f8d697';
+  pCtx.lineWidth = 2.2;
+  pCtx.strokeRect(8, 8, 496, 68);
+  pCtx.fillStyle = '#2a1914';
+  pCtx.font = 'bold 26px Georgia, serif';
+  pCtx.textAlign = 'center';
+  pCtx.textBaseline = 'middle';
+  pCtx.fillText('瓶 中 沧 海  ·  M A R E', 256, 42);
+  const plaqueTex = new THREE.CanvasTexture(plaqueCanvas);
+  plaqueTex.colorSpace = THREE.SRGBColorSpace;
+  addMesh(
+    scene,
+    new THREE.PlaneGeometry(2.38, 0.182),
+    new THREE.MeshStandardMaterial({ map: plaqueTex, roughness: 0.65 }),
+    plaqueBase.position.x,
+    plaqueBase.position.y,
+    1.99
+  );
+
+  // Stack of vintage leather-bound maritime books (旧书) on left side of desk
+  const booksGroup = addSubGroup(scene, -6.48, 0, 1.46);
+  booksGroup.rotation.y = 0.26;
+  const bookVoxels = [];
+  const bookSpecs = [
+    [0.22, 3.38, 1.94, 0.40, 0x523222], // Bottom folio (mahogany leather)
+    [0.63, 2.96, 1.72, 0.37, 0x5b3532], // Middle logbook (burgundy leather)
+    [0.99, 2.50, 1.44, 0.31, 0x1f3e3b]  // Top navigation treatise (deep teal leather)
+  ];
+  for (const [by, bw, bd, bh, coverHex] of bookSpecs) {
+    // Gilded parchment page block
+    addVox(bookVoxels, 0, by, 0, bw - 0.11, bh - 0.07, bd - 0.14, 0xb69d74);
+    // Top & bottom boards
+    for (const dy of [-bh / 2, bh / 2]) {
+      addVox(bookVoxels, 0, by + dy, 0, bw, 0.065, bd, coverHex);
+    }
+    // Spine with raised gold bands
+    addVox(bookVoxels, 0, by, bd * 0.5, bw, bh + 0.04, 0.108, coverHex);
+    for (const bandFrac of [-0.42, -0.34, 0.0, 0.34, 0.42]) {
+      addVox(bookVoxels, bw * bandFrac, by, bd * 0.5 + 0.058, 0.024, bh * 0.88, 0.015, 0xb88b4d);
+    }
+    // Page striations
+    for (let p = 0; p < 8; p++) {
+      addVox(bookVoxels, 0, by + randRange(-bh * 0.34, bh * 0.34), -bd * 0.49, bw - 0.22, 0.006, 0.01, 0x786145);
+    }
+  }
+  // Red silk bookmark ribbon hanging out of the top book
+  addVox(bookVoxels, -0.95, 0.88, -0.74, 0.08, 0.22, 0.03, 0xa82e26, 0, 0.18, -0.15);
+  buildVoxelBatch(booksGroup, bookVoxels, deskVoxelMat);
+
+  // Collapsible antique brass & leather spyglass / telescope (黄铜望远镜) on right foreground
+  const spyglassGroup = addSubGroup(scene, 5.05, 0.39, 2.66);
+  spyglassGroup.rotation.y = -0.25;
+  const stitchedLeatherMat = new THREE.MeshStandardMaterial({ map: deskWoodTex, color: 0x4b312a, roughness: 0.88 });
+  const coatedLensMat = new THREE.MeshStandardMaterial({
+    color: 0x1c5458,
+    metalness: 0.62,
+    roughness: 0.10,
+    emissive: 0x0d383b,
+    emissiveIntensity: 0.42
+  });
+  addCylinderX(spyglassGroup, -0.26, 0, 0, 1.98, 0.28, 0.33, brassMetalMat);
+  addCylinderX(spyglassGroup, -0.44, 0, 0, 1.44, 0.295, 0.34, stitchedLeatherMat);
+  addCylinderX(spyglassGroup,  0.95, 0, 0, 0.65, 0.185, 0.24, brassMetalMat);
+  addCylinderX(spyglassGroup,  1.42, 0, 0, 0.44, 0.128, 0.17, brassMetalMat);
+  addCylinderX(spyglassGroup, -1.36, 0, 0, 0.31, 0.36, 0.368, goldMetalMat);
+  addCylinderX(spyglassGroup, -1.52, 0, 0, 0.016, 0.296, 0.296, coatedLensMat);
+  addCylinderX(spyglassGroup,  1.64, 0, 0, 0.018, 0.104, 0.104, coatedLensMat);
+  for (const [rx, rr] of [[-1.48, 0.352], [-1.21, 0.340], [0.29, 0.295], [0.73, 0.244], [1.22, 0.185], [1.58, 0.135]]) {
+    addRingX(spyglassGroup, rx, rr, 0.019, goldMetalMat);
+  }
+
+  // ============================================================================
+  // 10. CORK STOPPER + RED WAX SEAL + NECK ROPE & HANGING PARCHMENT TAG
+  // ============================================================================
+  const corkTex = (() => {
+    const c = document.createElement('canvas');
+    c.width = 256;
+    c.height = 128;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#be8e55';
+    ctx.fillRect(0, 0, 256, 128);
+    for (let i = 0; i < 3600; i++) {
+      ctx.fillStyle = pick(['rgba(124,81,42,0.6)', 'rgba(231,184,119,0.52)', 'rgba(161,105,62,0.66)', 'rgba(103,64,39,0.52)']);
+      ctx.fillRect(randRange(0, 256), randRange(0, 128), randRange(0.8, 4.2), randRange(0.5, 2.5));
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  })();
+
+  const corkMat = new THREE.MeshStandardMaterial({ map: corkTex, roughness: 0.96 });
+  const redWaxMat = new THREE.MeshStandardMaterial({ color: 0xa3261d, roughness: 0.25, metalness: 0.05 });
+  const darkWaxMat = new THREE.MeshStandardMaterial({ color: 0x591815, roughness: 0.44 });
+
+  // Cork plug seated inside and protruding from the bottle mouth
+  addCylinderX(bottleShellGroup, 6.56, 0, 0, 0.70, 0.58, 0.70, corkMat);
+  // Stamped red sealing wax cap
+  addCylinderX(bottleShellGroup, 6.88, 0, 0, 0.16, 0.71, 0.69, redWaxMat);
+  addRingX(bottleShellGroup, 6.91, 0.67, 0.035, darkWaxMat);
+
+  // Voxel red wax drips around the bottle mouth
+  const waxDripVoxels = [];
+  for (let i = 0; i < 40; i++) {
+    const ang = (i * TAU) / 40;
+    const dripLen = randRange(0.10, 0.27) + (1 + sin(ang * 5)) * 0.068;
+    addVox(
+      waxDripVoxels,
+      6.85 - dripLen * 0.5,
+      0.70 * cos(ang),
+      0.70 * sin(ang),
+      dripLen,
+      0.078,
+      0.108,
+      pick([0xaf3426, 0x9c2a21, 0x892219]),
+      0,
+      ang,
+      0
+    );
+  }
+  buildVoxelBatch(bottleShellGroup, waxDripVoxels, deskVoxelMat);
+
+  // Coiled hemp neck cord & hanging parchment tag (颈绳吊牌)
+  const hempCordMat = new THREE.MeshStandardMaterial({ color: 0xb9995e, roughness: 0.95 });
+  for (let i = 0; i < 4; i++) {
+    addRingX(bottleShellGroup, 5.66 + i * 0.065, 0.755, 0.027, hempCordMat);
+  }
+  addCurveTube(
+    bottleShellGroup,
+    [
+      [5.80,  0.26, 0.72],
+      [5.78,  0.14, 0.84],
+      [5.72, -0.16, 0.93],
+      [5.60, -0.44, 0.96],
+      [5.49, -0.66, 1.00]
+    ],
+    0.024,
+    hempCordMat
+  );
+
+  const neckTagGroup = addSubGroup(bottleShellGroup, 5.51, -0.99, 1.03);
+  neckTagGroup.rotation.set(0.14, 0.0, -0.27);
+  const tagBoardMat = new THREE.MeshStandardMaterial({ color: 0xcaa773, roughness: 0.90 });
+  addScaledBox(neckTagGroup, 0, 0, 0, 0.55, 0.80, 0.045, tagBoardMat);
+
+  const tagCanvas = document.createElement('canvas');
+  tagCanvas.width = 144;
+  tagCanvas.height = 210;
+  const tCtx = tagCanvas.getContext('2d');
+  tCtx.fillStyle = '#be9b63';
+  tCtx.fillRect(0, 0, 144, 210);
+  tCtx.strokeStyle = '#6e4929';
+  tCtx.lineWidth = 2.2;
+  tCtx.strokeRect(9, 16, 126, 182);
+  // Crisp drawn anchor emblem on the tag
+  tCtx.strokeStyle = '#3f2716';
+  tCtx.lineWidth = 3.2;
+  tCtx.beginPath();
+  tCtx.arc(72, 66, 9, 0, TAU);
+  tCtx.moveTo(72, 75);
+  tCtx.lineTo(72, 124);
+  tCtx.moveTo(54, 88);
+  tCtx.lineTo(90, 88);
+  tCtx.moveTo(50, 108);
+  tCtx.quadraticCurveTo(72, 132, 94, 108);
+  tCtx.stroke();
+  tCtx.fillStyle = '#3f2716';
+  tCtx.textAlign = 'center';
+  tCtx.font = 'bold 16px Georgia, serif';
+  tCtx.fillText('MARE', 72, 154);
+  tCtx.font = '14px "Songti SC", Georgia, serif';
+  tCtx.fillText('瓶中沧海', 72, 178);
+  const tagTex = new THREE.CanvasTexture(tagCanvas);
+  tagTex.colorSpace = THREE.SRGBColorSpace;
+  addMesh(neckTagGroup, new THREE.PlaneGeometry(0.53, 0.78), new THREE.MeshStandardMaterial({ map: tagTex, roughness: 0.92 }), 0, 0, 0.025);
+  addMesh(neckTagGroup, new THREE.TorusGeometry(0.042, 0.014, 8, 24), brassMetalMat, 0, 0.33, 0.040);
+
+  // ============================================================================
+  // 11. VOLUMETRIC GLOW SPRITE HELPER (CLIPPED STRICTLY INSIDE BOTTLE)
+  // ============================================================================
+  const radialGlowTex = (() => {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(32, 32, 1, 32, 32, 31);
+    g.addColorStop(0.0, 'rgba(255, 255, 255, 0.82)');
+    g.addColorStop(0.22, 'rgba(255, 235, 190, 0.44)');
+    g.addColorStop(0.55, 'rgba(255, 185, 95, 0.14)');
+    g.addColorStop(1.0, 'rgba(255, 160, 60, 0.0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  })();
+
+  const clippedGlowMat = new THREE.ShaderMaterial({
+    uniforms: { ...sharedUniforms, uGlowMap: { value: radialGlowTex } },
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexShader: `
+      varying vec2 vUv;
+      varying vec3 vWorldPos;
+      void main() {
+        vec4 mvOrigin = modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+        vec2 scaleXY = vec2(length(modelMatrix[0].xyz), length(modelMatrix[1].xyz));
+        mvOrigin.xy += position.xy * scaleXY;
+        vWorldPos = cameraPosition + vec3(
+          dot(viewMatrix[0].xyz, mvOrigin.xyz),
+          dot(viewMatrix[1].xyz, mvOrigin.xyz),
+          dot(viewMatrix[2].xyz, mvOrigin.xyz)
+        );
+        vUv = uv;
+        gl_Position = projectionMatrix * mvOrigin;
+      }
+    `,
+    fragmentShader: bottleClipGLSL + `
+      uniform sampler2D uGlowMap;
+      uniform float uNight;
+      varying vec2 vUv;
+      varying vec3 vWorldPos;
+      void main() {
+        if (isOutsideBottle(vWorldPos, 0.038)) discard;
+        float a = texture2D(uGlowMap, vUv).a * (0.32 + uNight * 0.72);
+        gl_FragColor = vec4(1.0, 0.58, 0.15, a);
+      }
+    `
+  });
+
+  function addBottleGlow(parent, x, y, z, scale) {
+    const m = addMesh(parent, new THREE.PlaneGeometry(1, 1), clippedGlowMat, x, y, z);
+    m.scale.setScalar(scale);
+    m.frustumCulled = false;
+    m.renderOrder = 10;
+    return m;
+  }
+
+  // ============================================================================
+  // 12. CORAL ISLAND: RED-WHITE LIGHTHOUSE, PALMS, WARM COTTAGE, DOCK, SKIFF, TREASURE
+  // ============================================================================
+  const islandGroup = addSubGroup(oceanWorldGroup, 1.62, 0, -0.15);
+  const islandVoxels = [];
+  const islandLampVoxels = [];
+
+  // Terraced voxel coral reef base, sandy beach perimeter, and grassy crown
+  for (let x = -1.30; x <= 1.30; x += 0.118) {
+    for (let z = -0.84; z <= 0.88; z += 0.118) {
+      const ellip = (x / 1.28) ** 2 + (z / 0.86) ** 2;
+      if (ellip > 1.0 + randRange(-0.09, 0.09)) continue;
+      const topY = -0.32 - 0.15 * ellip + randRange(-0.035, 0.048);
+      const botY = -0.98 + max(0, ellip - 0.36) * 0.36 + randRange(-0.05, 0.04);
+      addVox(
+        islandVoxels,
+        x,
+        (topY + botY) * 0.5,
+        z,
+        0.117,
+        topY - botY,
+        0.117,
+        pick([0xad8564, 0xc49772, 0xca9c78, 0x967454])
+      );
+      addVox(
+        islandVoxels,
+        x,
+        topY + 0.016,
+        z,
+        0.118,
+        0.058,
+        0.118,
+        ellip > 0.56
+          ? pick([0xffdaa3, 0xeaba86, 0xf5cf98])
+          : pick([0x8fa75d, 0xa8b468, 0x7d9954, 0xc2bc78])
+      );
+    }
+  }
+
+  // Red-and-white striped lighthouse (红白灯塔 + 旋转光束)
+  const lhX = 0.52, lhZ = -0.14;
+  const lhRedPalette = [0xa8362e, 0xc14437, 0xd65545];
+  const lhWhitePalette = [0xf5e8cf, 0xe7d8be, 0xffefcf];
+
+  for (let course = 0; course < 16; course++) {
+    const cy = -0.245 + course * 0.070;
+    const diam = 0.51 - course * 0.013;
+    const step = diam / 7;
+    const bandPalette = floor(course / 3) % 2 ? lhRedPalette : lhWhitePalette;
+    for (let u = -3; u <= 3; u++) {
+      for (let v = -3; v <= 3; v++) {
+        if (abs(u) + abs(v) > 5) continue;
+        addVox(islandVoxels, lhX + u * step, cy, lhZ + v * step, step, 0.071, step, pick(bandPalette));
+      }
+    }
+  }
+
+  // Gallery deck & iron railing
+  for (let i = 0; i < 3; i++) {
+    const w = 0.54 - i * 0.035;
+    addVox(islandVoxels, lhX, 0.86 + i * 0.045, lhZ, w, 0.045, w, i === 1 ? 0xf5e5c4 : 0x8e332b);
+  }
+  // Lantern room pillars & warm beacon core
+  for (const dx of [-0.188, 0.188]) {
+    for (const dz of [-0.188, 0.188]) {
+      addVox(islandVoxels, lhX + dx, 1.04, lhZ + dz, 0.044, 0.21, 0.044, 0x543c35);
+      addVox(islandVoxels, lhX + dx, 1.00, lhZ + dz, 0.052, 0.026, 0.052, 0xbe8652);
+    }
+  }
+  addVox(islandLampVoxels, lhX, 1.04, lhZ, 0.296, 0.195, 0.296, 0xffe29e);
+  // Conical red cupola roof & brass finial
+  for (let j = 0; j < 6; j++) {
+    const rw = 0.49 - j * 0.078;
+    addVox(islandVoxels, lhX, 1.162 + j * 0.038, lhZ, rw, 0.043, rw, pick(lhRedPalette));
+  }
+  addVox(islandVoxels, lhX, 1.405, lhZ, 0.048, 0.11, 0.048, 0xc8a564);
+  // Lighthouse door & slit windows
+  addVox(islandVoxels, lhX, -0.15, lhZ + 0.25, 0.104, 0.20, 0.038, 0x574436);
+  for (const wy of [0.12, 0.41, 0.64]) {
+    const wz = lhZ + 0.228 - (wy + 0.1) * 0.078;
+    addVox(islandVoxels, lhX, wy, wz, 0.085, 0.12, 0.038, 0x5d4f42);
+    addVox(islandLampVoxels, lhX, wy, wz + 0.024, 0.050, 0.078, 0.015, 0xffd07e);
+  }
+  addBottleGlow(islandGroup, lhX, 1.045, lhZ, 0.88);
+
+  // Dual opposing rotating volumetric light beams (旋转光束) clipped to bottle inner hull
+  const lighthouseBeamPivot = addSubGroup(islandGroup, lhX, 1.04, lhZ);
+  const beamConeGeo = new THREE.ConeGeometry(0.45, 4.4, 24, 1, true);
+  beamConeGeo.rotateZ(Math.PI / 2);
+  beamConeGeo.translate(2.2, 0, 0);
+
+  const lighthouseBeamMat = new THREE.ShaderMaterial({
+    uniforms: sharedUniforms,
+    side: THREE.DoubleSide,
+    transparent: true,
+    depthWrite: false,
+    forceSinglePass: true,
+    blending: THREE.AdditiveBlending,
+    vertexShader: `
+      varying vec3 vWorldPos;
+      varying vec3 vLocalPos;
+      void main() {
+        vLocalPos = position;
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vWorldPos = wp.xyz;
+        gl_Position = projectionMatrix * viewMatrix * wp;
+      }
+    `,
+    fragmentShader: bottleClipGLSL + `
+      varying vec3 vWorldPos;
+      varying vec3 vLocalPos;
+      uniform float uNight;
+      uniform float uStorm;
+      void main() {
+        if (isOutsideBottle(vWorldPos, 0.09)) discard;
+        vec3 bLocal = (invBottle * vec4(vWorldPos, 1.0)).xyz;
+        float wallSoft = clamp((bottleRadiusAt(bLocal.x) - length(bLocal.yz)) / 0.48, 0.0, 1.0);
+        float distFade = pow(clamp(1.0 - abs(vLocalPos.x) / 4.4, 0.0, 1.0), 1.55);
+        float intensity = distFade * wallSoft * (0.052 + uNight * 0.22 + uStorm * 0.09);
+        gl_FragColor = vec4(1.0, 0.75, 0.30, intensity);
+      }
+    `
+  });
+
+  const primaryBeam = addMesh(lighthouseBeamPivot, beamConeGeo, lighthouseBeamMat);
+  primaryBeam.renderOrder = 9;
+  const secondaryBeam = addMesh(lighthouseBeamPivot, beamConeGeo, lighthouseBeamMat);
+  secondaryBeam.rotation.y = Math.PI * 0.5;
+  secondaryBeam.scale.set(0.65, 0.65, 0.65);
+  secondaryBeam.renderOrder = 9;
+
+  // Warm-windowed coastal cottage (暖窗小屋)
+  const cotX = -0.33, cotZ = 0.19;
+  for (let i = 0; i < 6; i++) {
+    addVox(islandVoxels, cotX, -0.252 + i * 0.052, cotZ, 0.59, 0.052, 0.43, pick([0xf3c896, 0xe1ba8a, 0xf9daa4]));
+  }
+  // Pitched terracotta tile roof
+  for (let i = 0; i < 6; i++) {
+    const rd = 0.57 - i * 0.080;
+    addVox(islandVoxels, cotX, 0.065 + i * 0.037, cotZ, 0.68, 0.048, rd, pick([0x8c4031, 0x9f4934, 0xab523b, 0xc16145]));
+  }
+  // Brick chimney
+  addVox(islandVoxels, cotX + 0.205, 0.235, cotZ - 0.138, 0.090, 0.22, 0.090, 0x9e6d55);
+  // Glowing paned windows on front & back
+  for (const wx of [-0.178, 0.148]) {
+    addVox(islandVoxels, cotX + wx, -0.10, cotZ + 0.222, 0.115, 0.135, 0.022, 0x52362c);
+    addVox(islandLampVoxels, cotX + wx, -0.10, cotZ + 0.237, 0.082, 0.104, 0.014, 0xffe098);
+    addVox(islandVoxels, cotX + wx, -0.10, cotZ + 0.251, 0.012, 0.106, 0.012, 0x634637);
+    addVox(islandVoxels, cotX + wx, -0.10, cotZ + 0.251, 0.085, 0.013, 0.012, 0x634637);
+    addBottleGlow(islandGroup, cotX + wx, -0.10, cotZ + 0.25, 0.34);
+  }
+  // Side warm window
+  addVox(islandLampVoxels, cotX - 0.30, -0.10, cotZ, 0.016, 0.095, 0.085, 0xffe098);
+  addBottleGlow(islandGroup, cotX - 0.31, -0.10, cotZ, 0.28);
+  // Timber cottage door & brass knob
+  addVox(islandVoxels, cotX - 0.025, -0.21, cotZ + 0.228, 0.11, 0.21, 0.030, 0x694432);
+  addVox(islandVoxels, cotX - 0.049, -0.21, cotZ + 0.247, 0.016, 0.017, 0.012, 0xd8a648);
+
+  // Wooden pier / dock on pilings (码头) with hanging dock lantern
+  for (let i = 0; i < 10; i++) {
+    const pz = 0.58 + i * 0.072;
+    addVox(islandVoxels, 0.13, -0.374, pz, 0.25, 0.046, 0.065, pick([0x926640, 0xb28151, 0x71513b]));
+    if (i % 3 === 0) {
+      for (const px of [-0.006, 0.266]) {
+        addVox(islandVoxels, px, -0.47, pz, 0.035, 0.34, 0.036, 0x584337);
+        addVox(islandVoxels, px, -0.288, pz, 0.048, 0.034, 0.046, 0xb68a5c);
+      }
+    }
+  }
+  // Pier lantern post at the end of the dock
+  addVox(islandVoxels, 0.266, -0.21, 1.22, 0.032, 0.26, 0.032, 0x4f392d);
+  addVox(islandLampVoxels, 0.266, -0.10, 1.22, 0.056, 0.068, 0.056, 0xffd884);
+  addBottleGlow(islandGroup, 0.266, -0.10, 1.22, 0.26);
+
+  // Swaying coconut palm trees (棕榈)
+  function addVoxelPalm(px, pz, height, leanX) {
+    for (let i = 0; i < 9; i++) {
+      const u = i / 8;
+      addVox(
+        islandVoxels,
+        px + leanX * u * u,
+        -0.31 + height * u,
+        pz + u * 0.052,
+        0.073 - u * 0.025,
+        0.10,
+        0.068 - u * 0.026,
+        pick([0x9d7544, 0x795633, 0xbe9562])
+      );
+    }
+    const crownX = px + leanX;
+    const crownZ = pz + 0.052;
+    for (let f = 0; f < 7; f++) {
+      const ang = (f * TAU) / 7 + randRange(-0.15, 0.15);
+      const reach = randRange(0.29, 0.41);
+      for (let s = 0; s <= 6; s++) {
+        const u = s / 6;
+        const leafW = 1 - abs(u - 0.35);
+        const lx = crownX + cos(ang) * u * reach;
+        const lz = crownZ + sin(ang) * u * reach;
+        const ly = height - 0.28 + sin(u * Math.PI) * 0.106 - u * 0.052;
+        addVox(
+          islandVoxels,
+          lx,
+          ly,
+          lz,
+          0.075,
+          0.032,
+          0.040 + 0.048 * leafW,
+          pick([0x367445, 0x53894c, 0x739855, 0x447d53]),
+          -ang
+        );
+      }
+    }
+    for (let c = 0; c < 4; c++) {
+      addVox(islandVoxels, crownX + randRange(-0.06, 0.06), height - 0.33, crownZ + randRange(-0.055, 0.055), 0.045, 0.040, 0.045, 0x724f36);
+    }
+  }
+  addVoxelPalm(-0.90, -0.13, 0.74, -0.12);
+  addVoxelPalm(-0.66, -0.51, 0.61,  0.11);
+  addVoxelPalm( 0.95,  0.11, 0.67,  0.16);
+
+  // Helper to construct an open voxel treasure chest brimming with gold
+  function addVoxelTreasureChest(targetList, tx, ty, tz, scale) {
+    addVox(targetList, tx, ty, tz, 0.50 * scale, 0.20 * scale, 0.32 * scale, 0x774425);
+    addVox(targetList, tx, ty + 0.105 * scale, tz, 0.46 * scale, 0.028 * scale, 0.28 * scale, 0xffb83f);
+    // Open hinged curved lid
+    addVox(targetList, tx, ty + 0.236 * scale, tz - 0.20 * scale, 0.49 * scale, 0.056 * scale, 0.30 * scale, 0x9c5c31, 0, -1.12, 0);
+    for (const strapX of [-0.188, 0.188]) {
+      addVox(targetList, tx + strapX * scale, ty, tz + 0.16 * scale, 0.036 * scale, 0.21 * scale, 0.030 * scale, 0xd8a247);
+      addVox(targetList, tx + strapX * scale, ty + 0.232 * scale, tz - 0.202 * scale, 0.035 * scale, 0.058 * scale, 0.308 * scale, 0xf3b94e, 0, -1.12, 0);
+    }
+    // Lockplate & keyhole
+    addVox(targetList, tx, ty + 0.04 * scale, tz + 0.173 * scale, 0.088 * scale, 0.080 * scale, 0.026 * scale, 0xedd06b);
+    addVox(targetList, tx, ty + 0.043 * scale, tz + 0.187 * scale, 0.015 * scale, 0.026 * scale, 0.010 * scale, 0x422b1c);
+    // Heap of gleaming gold coins & jewels
+    for (let i = 0; i < 32; i++) {
+      addVox(
+        targetList,
+        tx + randRange(-0.215, 0.215) * scale,
+        ty + randRange(0.115, 0.178) * scale,
+        tz + randRange(-0.118, 0.125) * scale,
+        0.044 * scale,
+        0.018 * scale,
+        0.035 * scale,
+        pick([0xffda60, 0xf7aa3e, 0xffeca4, 0xe84855]),
+        randRange(-1, 1)
+      );
+    }
+  }
+
+  // Island beach treasure chest (宝藏)
+  addVoxelTreasureChest(islandVoxels, 1.00, -0.285, 0.30, 0.52);
+  addBottleGlow(islandGroup, 1.00, -0.22, 0.30, 0.30);
+
+  buildVoxelBatch(islandGroup, islandVoxels, voxelSolidMat);
+  buildVoxelBatch(islandGroup, islandLampVoxels, voxelWindowMat);
+
+  // ============================================================================
+  // 13. UNDERWATER RELICS: SUNKEN TREASURE CHEST, ANCHOR, AMPHORAE, CORAL REEF
+  // ============================================================================
+  const underwaterVoxels = [];
+  // Sunken treasure chest with golden glow (水底沉着宝箱 - 金光)
+  addVoxelTreasureChest(underwaterVoxels, -1.52, -1.81, 0.84, 1.18);
+  addBottleGlow(oceanWorldGroup, -1.52, -1.54, 1.00, 1.35);
+
+  // Vibrant branching voxel corals (珊瑚)
+  function addVoxelCoralCluster(cx, cy, cz, scale, palette) {
+    for (let b = 0; b < 8; b++) {
+      const ang = (b * TAU) / 8;
+      const hLen = randRange(0.15, 0.40) * scale;
+      const spread = randRange(0.11, 0.24) * scale;
+      for (let j = 0; j < 5; j++) {
+        const u = j / 4;
+        addVox(
+          underwaterVoxels,
+          cx + cos(ang) * u * spread,
+          cy + u * hLen,
+          cz + sin(ang) * u * spread,
+          0.070 * scale,
+          0.082 * scale,
+          0.074 * scale,
+          palette[min(2, floor(u * 2.99))]
+        );
+      }
+    }
+  }
+  addVoxelCoralCluster(-2.26, -1.90, 1.09, 1.30, [0x86334e, 0xb9475b, 0xf67676]);
+  addVoxelCoralCluster(-0.96, -1.82, 1.23, 0.90, [0x8e4976, 0xb1689c, 0xe3a1c3]);
+  addVoxelCoralCluster( 1.30, -1.99, 1.07, 1.42, [0x8f4935, 0xcc5c4d, 0xfd8c74]);
+  addVoxelCoralCluster( 2.43, -1.83, 1.03, 0.92, [0x565172, 0x7964a3, 0xb88fc0]);
+  addVoxelCoralCluster(-3.66, -1.90, 1.14, 0.80, [0x1d6661, 0x368983, 0x6ab49c]);
+
+  // Ancient Greek/Roman terracotta amphora (双耳瓶)
+  const amphoraGroup = addSubGroup(oceanWorldGroup, 0.49, -1.65, 1.18);
+  amphoraGroup.rotation.z = -0.28;
+  const terracottaMat = makeClippedVoxelMaterial({ color: 0xbd6948, roughness: 0.88 }, false);
+  const amphoraLathe = new THREE.LatheGeometry(
+    [
+      [0.000, -0.215], [0.072, -0.215], [0.112, -0.150], [0.152, -0.045],
+      [0.166,  0.042], [0.127,  0.154], [0.060,  0.196], [0.060,  0.268],
+      [0.088,  0.273], [0.089,  0.299], [0.060,  0.302], [0.048,  0.210],
+      [0.000,  0.195]
+    ].map((p) => new THREE.Vector2(...p)),
+    14
+  );
+  addMesh(amphoraGroup, amphoraLathe, terracottaMat);
+  for (const side of [-1, 1]) {
+    addCurveTube(
+      amphoraGroup,
+      [
+        [side * 0.066, 0.256, 0],
+        [side * 0.166, 0.228, 0],
+        [side * 0.198, 0.146, 0],
+        [side * 0.150, 0.072, 0]
+      ],
+      0.022,
+      terracottaMat
+    );
+  }
+
+  // Sunken wrought-iron ship anchor & chain (沉锚)
+  const anchorGroup = addSubGroup(oceanWorldGroup, -3.05, -1.72, 0.96);
+  anchorGroup.rotation.set(-0.18, 0.29, -0.38);
+  const anchorIronMat = makeClippedVoxelMaterial({ color: 0x395a62, metalness: 0.46, roughness: 0.42 }, false);
+  addScaledBox(anchorGroup, 0, 0, 0, 0.092, 0.63, 0.070, anchorIronMat);
+  addScaledBox(anchorGroup, 0, 0.18, 0, 0.365, 0.054, 0.072, anchorIronMat);
+  addMesh(anchorGroup, new THREE.TorusGeometry(0.070, 0.024, 8, 20), anchorIronMat, 0, 0.365, 0);
+  addCurveTube(
+    anchorGroup,
+    [
+      [-0.292, -0.180, 0],
+      [-0.225, -0.284, 0],
+      [ 0.000, -0.350, 0],
+      [ 0.225, -0.284, 0],
+      [ 0.292, -0.180, 0]
+    ],
+    0.043,
+    anchorIronMat
+  );
+  for (const side of [-1, 1]) {
+    const fluke = addMesh(anchorGroup, new THREE.ConeGeometry(0.088, 0.165, 4), anchorIronMat, side * 0.288, -0.162, 0);
+    fluke.rotation.z = -side * 0.59;
+  }
+  const chainMat = makeClippedVoxelMaterial({ color: 0x6d755e, roughness: 0.86 }, false);
+  const chainGroup = addSubGroup(oceanWorldGroup, -3.00, -1.36, 0.98);
+  const chainLinkGeo = new THREE.TorusGeometry(0.036, 0.0095, 6, 12);
+  for (let i = 0; i < 14; i++) {
+    const lk = addMesh(chainGroup, chainLinkGeo, chainMat, -i * 0.048, -i * 0.028 + sin(i * 0.5) * 0.068, -i * 0.014);
+    lk.rotation.y = i % 2 ? 1.14 : 0.16;
+    lk.rotation.z = 0.30;
+  }
+
+  buildVoxelBatch(oceanWorldGroup, underwaterVoxels, voxelSolidMat);
+
+  // ============================================================================
+  // 14. THREE-MASTED TALL SHIP (三桅方帆 + 红纹主帆 + 全套索具)
+  // ============================================================================
+  const shipGroup = addSubGroup(oceanWorldGroup);
+  const hullVoxels = [];
+  const sailVoxels = [];
+  const pennantVoxels = [];
+  const hullTimberPalette = [0x643c2b, 0x794829, 0x895738, 0x965e39];
+  const deckPlankPalette  = [0xa26b3f, 0xb77d49, 0xc78c56, 0xb87c50];
+
+  // Sculpted stepped voxel hull with sheer curve, gunwales & cannon ports
+  for (let k = -13; k <= 14; k++) {
+    const x = k * 0.094;
+    const halfBeam = 0.372 * pow(max(0.03, 1 - pow(abs(x - 0.03) / 1.48, 3)), 0.69);
+    const sheer = 0.054 * x * x;
+    for (let row = 0; row < 7; row++) {
+      const y = -0.245 + row * 0.071 + sheer;
+      const rowSpan = halfBeam * (0.29 + 0.71 * sin(((row + 1) * Math.PI) / 14));
+      const plankColor = row === 2 ? 0x422b26 : row === 5 ? 0xb68c51 : pick(hullTimberPalette);
+      addVox(hullVoxels, x, y, 0, 0.095, 0.071, rowSpan * 2, plankColor);
+    }
+    addVox(hullVoxels, x, 0.218 + sheer, 0, 0.094, 0.038, halfBeam * 1.94, pick(deckPlankPalette));
+    for (const side of [-1, 1]) {
+      addVox(hullVoxels, x, 0.21 + sheer, side * halfBeam, 0.096, 0.076, 0.040, 0x603c2b);
+      addVox(hullVoxels, x, 0.252 + sheer, side * halfBeam, 0.096, 0.026, 0.046, 0xb8834e);
+      if (k % 3 === 0 && abs(k) < 12) {
+        addVox(hullVoxels, x, 0.064 + sheer, side * (halfBeam * 0.96), 0.097, 0.075, 0.025, 0xb98854);
+        addVox(hullVoxels, x, 0.064 + sheer, side * (halfBeam * 0.96 + 0.018), 0.062, 0.047, 0.025, 0x392826);
+        addVox(hullVoxels, x, 0.060 + sheer, side * (halfBeam * 0.96 + 0.038), 0.035, 0.025, 0.065, 0x455054);
+      }
+    }
+  }
+
+  // Raised stern poop deck, cabin windows & twin brass stern lanterns
+  for (let j = 0; j < 4; j++) {
+    const py = 0.28 + 0.053 * j;
+    addVox(hullVoxels, -1.02, py, 0, 0.49 - 0.030 * j, 0.052, 0.56 - 0.045 * j, pick(hullTimberPalette));
+  }
+  addVox(hullVoxels, -1.05, 0.488, 0, 0.50, 0.044, 0.56, 0x764a2e);
+  addVox(hullVoxels, -1.14, 0.524, 0, 0.42, 0.031, 0.58, 0xb9814a);
+  for (const side of [-1, 1]) {
+    for (let j = 0; j < 4; j++) {
+      const wx = -1.25 + j * 0.107;
+      addVox(hullVoxels, wx, 0.398, side * 0.220, 0.077, 0.092, 0.024, 0xc08647);
+      addVox(hullVoxels, wx, 0.399, side * 0.236, 0.049, 0.067, 0.016, 0x709d92);
+      addVox(hullVoxels, wx, 0.402, side * 0.248, 0.008, 0.067, 0.011, 0xd2a66b);
+    }
+    addVox(hullVoxels, -0.87, 0.645, side * 0.22, 0.061, 0.082, 0.061, 0xc68e3d);
+    addVox(hullVoxels, -0.87, 0.689, side * 0.22, 0.071, 0.023, 0.071, 0x58392b);
+    addVox(hullVoxels, -0.87, 0.595, side * 0.22, 0.041, 0.061, 0.043, 0x503527);
+  }
+  // Prow stempost & bowsprit (斜桁)
+  addVox(hullVoxels, 1.36, 0.254, 0, 0.122, 0.226, 0.108, 0x9b6338, 0, 0, -0.25);
+  addVox(hullVoxels, 1.59, 0.398, 0, 0.60,  0.044, 0.044, 0x8c5b34, 0, 0,  0.25);
+  addVox(hullVoxels, 1.79, 0.494, 0, 0.51,  0.024, 0.024, 0xc1975e, 0, 0,  0.25);
+
+  // Full standing & running rigging (全套索具) clipped to bottle
+  const riggingMaterials = [
+    new THREE.LineBasicMaterial({ color: 0x745e43, transparent: true, opacity: 0.80 }),
+    new THREE.LineBasicMaterial({ color: 0xc2a97c, transparent: true, opacity: 0.68 }),
+    new THREE.LineBasicMaterial({ color: 0x564433, transparent: true, opacity: 0.82 })
+  ].map((m) => {
+    m.onBeforeCompile = (shader) => {
+      shader.uniforms.invBottle = uInvBottle;
+      shader.vertexShader = 'varying vec3 vHullWorld;\n' + shader.vertexShader.replace(
+        '#include <project_vertex>',
+        '#include <project_vertex>\nvHullWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;'
+      );
+      shader.fragmentShader = bottleClipGLSL + 'varying vec3 vHullWorld;\n' + shader.fragmentShader.replace(
+        '#include <clipping_planes_fragment>',
+        '#include <clipping_planes_fragment>\nif (isOutsideBottle(vHullWorld, 0.025)) discard;'
+      );
+    };
+    return m;
+  });
+
+  const rigLineCoords = [[], [], []];
+  function addRigRope(pts, groupIdx = 0) {
+    for (let i = 1; i < pts.length; i++) {
+      rigLineCoords[groupIdx].push(...pts[i - 1], ...pts[i]);
+    }
+  }
+
+  // Billowing square sail builder with red-striped main course (三桅方帆 + 红纹主帆)
+  function addSquareSailPanel(mastX, topY, width, height, yawAngle, isRedStriped) {
+    const xOffset = 0.11;
+    const transformSailPt = (u, y, belly) => [
+      mastX + xOffset + sin(yawAngle) * u + cos(yawAngle) * belly,
+      y,
+      cos(yawAngle) * u - sin(yawAngle) * belly
+    ];
+    const cols = ceil(width / 0.048);
+    const rows = ceil(height / 0.049);
+    for (let r = 0; r < rows; r++) {
+      const vf = (r + 0.5) / rows;
+      const rowWidth = width * (1 + 0.108 * sin(vf * Math.PI) - vf * 0.106);
+      for (let c = 0; c < cols; c++) {
+        const u = (c + 0.5) / cols - 0.5;
+        const footArch = (1 - 4 * u * u) * 0.060 * pow(vf, 3);
+        const py = topY - vf * height + footArch;
+        const belly = sin(vf * Math.PI) * (0.116 + 0.076 * (1 - 4 * u * u));
+        const [sx, , sz] = transformSailPt(u * rowWidth, py, belly);
+        const inRedStripe = isRedStriped && (abs(u) < 0.088 || (abs(u) > 0.29 && abs(u) < 0.41));
+        const sailPalette = inRedStripe
+          ? [0x9e312f, 0xb3473e, 0xc25248]
+          : [0xe9d7ad, 0xf3e5c2, 0xffedc9, 0xe8d7b7];
+        const shade = rand() < 0.18 ? pick(sailPalette) : sailPalette[0];
+        addVox(sailVoxels, sx, py, sz, 0.041, height / rows + 0.009, rowWidth / cols + 0.009, shade, yawAngle);
+      }
+    }
+    const yardLeft = transformSailPt(-width * 0.57, topY + 0.027, 0);
+    const yardRight = transformSailPt(width * 0.57, topY + 0.027, 0);
+    const yardMid = transformSailPt(0, topY + 0.027, 0);
+    addVox(hullVoxels, ...yardMid, 0.036, 0.036, width * 1.19, 0x815432, yawAngle);
+    addRigRope([[mastX, topY + 0.13, 0], yardLeft,  [mastX + 0.47, 0.27, yardLeft[2] * 0.76]], 1);
+    addRigRope([[mastX, topY + 0.13, 0], yardRight, [mastX + 0.47, 0.27, yardRight[2] * 0.76]], 1);
+    addRigRope([
+      transformSailPt(-width * 0.445, topY - height, 0.016),
+      transformSailPt(0, topY - height + 0.060, 0.021),
+      transformSailPt(width * 0.445, topY - height, 0.016)
+    ], 0);
+    addRigRope([transformSailPt(-width * 0.445, topY - height, 0.016), [mastX - 0.43, 0.28, -0.265]], 0);
+    addRigRope([transformSailPt( width * 0.445, topY - height, 0.016), [mastX - 0.43, 0.28,  0.265]], 0);
+  }
+
+  // Three masts: Mizzen (-0.83), Main (-0.026), Fore (+0.77)
+  const mastConfigs = [
+    [-0.83,  1.51, 0.62],
+    [-0.026, 1.98, 0.98],
+    [ 0.77,  1.75, 0.77]
+  ];
+  for (let m = 0; m < mastConfigs.length; m++) {
+    const [mx, mTop, sWidth] = mastConfigs[m];
+    const yardYaw = -0.55 + m * 0.07;
+    addVox(hullVoxels, mx, (mTop + 0.26) * 0.5, 0, 0.061, mTop - 0.185, 0.061, 0x77482d);
+    addVox(hullVoxels, mx - 0.019, mTop * 0.64, 0, 0.019, mTop * 0.70, 0.025, 0xc08c55);
+    for (const ringY of [mTop * 0.64, mTop * 0.78, mTop - 0.065]) {
+      addVox(hullVoxels, mx, ringY, 0, 0.082, 0.053, 0.082, 0x584133);
+    }
+    // Crow's nest platform
+    addVox(hullVoxels, mx, mTop * 0.65, 0, 0.166, 0.040, 0.206, 0x935b32);
+    // Lower course & upper topsail
+    addSquareSailPanel(mx, mTop - 0.46, sWidth, 0.535 - (m === 0 ? 0.105 : 0), yardYaw, m === 1);
+    addSquareSailPanel(mx, mTop - 0.135, sWidth * 0.64, 0.287, yardYaw, m === 1);
+
+    // Shrouds & horizontal ratlines (绳梯)
+    for (const side of [-1, 1]) {
+      const gunwaleZ = side * 0.36;
+      for (let s = 0; s < 4; s++) {
+        addRigRope([[mx, mTop * 0.65, 0], [mx - 0.27 + s * 0.12, 0.26, gunwaleZ]], 2);
+      }
+      for (let r = 1; r <= 9; r++) {
+        const rf = r / 10;
+        addRigRope([
+          [mx - 0.27 * rf, lerp(mTop * 0.65, 0.26, rf), gunwaleZ * rf],
+          [mx + 0.09 * rf, lerp(mTop * 0.65, 0.26, rf), gunwaleZ * rf]
+        ], 2);
+      }
+      addRigRope([[mx, mTop, 0], [mx - 0.47, 0.265, gunwaleZ]], 0);
+    }
+
+    // Masthead pennants
+    const pLen = m === 1 ? 8 : 5;
+    for (let j = 0; j < pLen; j++) {
+      const drop = m === 1 ? j * 0.005 : j * 0.009;
+      addVox(
+        pennantVoxels,
+        mx - 0.029 - j * 0.041,
+        mTop + 0.018 - drop,
+        sin(j * 0.75) * 0.034,
+        0.046,
+        0.067 - drop,
+        0.020,
+        m === 1 ? 0xb84b3a : 0xe6c48b
+      );
+    }
+  }
+
+  // Longitudinal stays connecting stern, masts, and bowsprit
+  addRigRope([[-1.36, 0.438, 0], [-0.83, 1.51, 0], [-0.026, 1.98, 0], [0.77, 1.75, 0], [1.99, 0.56, 0]], 1);
+  addRigRope([[-0.83, 1.51, 0], [-0.03, 1.37, 0], [0.77, 1.15, 0], [1.78, 0.46, 0]], 0);
+  for (const side of [-1, 1]) {
+    addRigRope([[-1.24, 0.468, side * 0.26], [-0.69, 0.299, side * 0.31], [0.45, 0.264, side * 0.34], [1.35, 0.345, side * 0.12]], 0);
+    addRigRope([[0.77, 1.68, 0], [1.36, 0.35, side * 0.22], [1.97, 0.54, 0]], 1);
+  }
+  // Fore triangular jib sail
+  for (let i = 0; i < 14; i++) {
+    const jx = 1.04 + i * 0.050;
+    const jh = (1 - i / 15) * 0.49;
+    addVox(
+      sailVoxels,
+      jx,
+      0.55 + jh * 0.5,
+      0.052 + sin(i * 0.25) * 0.09,
+      0.055,
+      jh,
+      0.036,
+      pick([0xddc491, 0xf0dfba, 0xe9d3a4]),
+      -0.14,
+      0,
+      -0.32
+    );
+  }
+
+  for (let i = 0; i < 3; i++) {
+    const rigGeo = new THREE.BufferGeometry();
+    rigGeo.setAttribute('position', new THREE.Float32BufferAttribute(rigLineCoords[i], 3));
+    shipGroup.add(new THREE.LineSegments(rigGeo, riggingMaterials[i]));
+  }
+
+  buildVoxelBatch(shipGroup, hullVoxels, voxelSolidMat);
+  buildVoxelBatch(shipGroup, sailVoxels, voxelFabricMat);
+  buildVoxelBatch(shipGroup, pennantVoxels, voxelSolidMat);
+
+  // Glowing stern lanterns on the ship
+  const shipLanternVoxels = [];
+  for (const lz of [-0.22, 0.22]) {
+    addVox(shipLanternVoxels, -0.87, 0.645, lz, 0.062, 0.062, 0.064, 0xffbf62);
+    addBottleGlow(shipGroup, -0.87, 0.645, lz, 0.25);
+  }
+  buildVoxelBatch(shipGroup, shipLanternVoxels, voxelWindowMat);
+
+  // ============================================================================
+  // 15. ROWBOAT AT PIER (小艇) & CHANNEL BUOY (浮标)
+  // ============================================================================
+  const skiffGroup = addSubGroup(oceanWorldGroup, 2.12, SEA_LEVEL, 0.98);
+  const skiffVoxels = [];
+  for (let i = -4; i <= 4; i++) {
+    const sw = 0.19 - 0.024 * abs(i);
+    addVox(skiffVoxels, 0.074 * i, -0.029, 0, 0.074, 0.073, sw, 0x734837);
+    for (const s of [-1, 1]) {
+      addVox(skiffVoxels, 0.074 * i, 0.022, s * sw * 0.55, 0.074, 0.068, 0.045, 0x9e633c);
+      addVox(skiffVoxels, 0.074 * i, 0.052, s * sw * 0.56, 0.074, 0.021, 0.055, 0xc3955e);
+    }
+  }
+  for (const bx of [-0.14, 0.08]) {
+    addVox(skiffVoxels, bx, 0.027, 0, 0.042, 0.029, 0.18, 0xc19662);
+  }
+  buildVoxelBatch(skiffGroup, skiffVoxels, voxelSolidMat);
+
+  const buoyGroup = addSubGroup(oceanWorldGroup, -4.62, SEA_LEVEL, 1.28);
+  const buoyVoxels = [];
+  for (let i = 0; i < 6; i++) {
+    const bw = [0.10, 0.175, 0.21, 0.185, 0.13, 0.076][i];
+    addVox(buoyVoxels, 0, -0.094 + i * 0.056, 0, bw, 0.056, bw, i % 3 === 0 ? 0xf3d7a1 : 0xbc4535);
+  }
+  addVox(buoyVoxels, 0, 0.292, 0, 0.030, 0.15, 0.030, 0x6b4135);
+  addVox(buoyVoxels, 0.045, 0.333, 0, 0.11, 0.057, 0.022, 0xe9a85c);
+  buildVoxelBatch(buoyGroup, buoyVoxels, voxelSolidMat);
+  addBottleGlow(buoyGroup, 0, 0.36, 0, 0.20);
+
+  // ============================================================================
+  // 16. CUMULUS CLOUDS, 6 CIRCLING SEAGULLS, BREACHING WHALE, FISH & CRAB
+  // ============================================================================
+  // Fluffy cumulus clouds high above the birds and masts (积云在鸟与桅杆之上)
+  const fairCloudsGroup = addSubGroup(oceanWorldGroup);
+  const fairCloudVoxels = [];
+  const cloudCenters = [
+    [-4.30, 1.79, -0.68, 1.32],
+    [-2.48, 1.92, -0.32, 1.14],
+    [-0.44, 2.02, -0.57, 1.65],
+    [ 1.66, 1.88, -0.55, 1.42],
+    [ 2.88, 1.69, -0.78, 0.88]
+  ];
+  for (const [cx, cy, cz, cw] of cloudCenters) {
+    for (let i = 0; i < 190; i++) {
+      const dx = randRange(-cw * 0.5, cw * 0.5);
+      const dy = randRange(-0.14, 0.30);
+      const dz = randRange(-0.34, 0.34);
+      const billows = 0.14 * sin((dx + 0.29) * 9) + 0.10 * cos(dx * 16);
+      if ((dx / (cw * 0.51)) ** 2 + ((dy - 0.036 - billows) / 0.25) ** 2 + (dz / 0.34) ** 2 > 1) continue;
+      addVox(
+        fairCloudVoxels,
+        cx + dx,
+        cy + dy,
+        cz + dz,
+        randRange(0.10, 0.20),
+        randRange(0.066, 0.128),
+        randRange(0.12, 0.22),
+        i % 4 ? 0xede1d2 : 0xc7d3d0
+      );
+    }
+  }
+  const cloudVoxelMat = makeClippedVoxelMaterial({ roughness: 0.98, metalness: 0.0 }, true);
+  const fairCloudsBatch = buildVoxelBatch(fairCloudsGroup, fairCloudVoxels, cloudVoxelMat);
+
+  // 6 circling seagulls with articulated flapping wings (六只海鸥盘旋)
+  const seagulls = [];
+  for (let i = 0; i < 6; i++) {
+    const birdRoot = addSubGroup(oceanWorldGroup);
+    const wingLeft = addSubGroup(birdRoot);
+    const wingRight = addSubGroup(birdRoot);
+    const bodyBits = [];
+    addVox(bodyBits,  0.020,  0.000, 0, 0.138, 0.053, 0.062, 0xf1e1c8);
+    addVox(bodyBits,  0.088,  0.021, 0, 0.062, 0.051, 0.048, 0xf7f1df);
+    addVox(bodyBits,  0.134,  0.012, 0, 0.041, 0.020, 0.029, 0xd8a44e);
+    addVox(bodyBits, -0.060, -0.006, 0, 0.073, 0.025, 0.090, 0xe5d9c7);
+    buildVoxelBatch(birdRoot, bodyBits, voxelSolidMat);
+
+    for (const side of [-1, 1]) {
+      const wingBits = [];
+      for (let j = 0; j < 6; j++) {
+        addVox(
+          wingBits,
+          0.025 - 0.019 * j,
+          0.009 + sin(j * 0.4) * 0.017,
+          side * (0.046 + 0.043 * j),
+          0.089 - 0.007 * j,
+          0.024,
+          0.057,
+          j > 3 ? 0x445058 : 0xeddfd0
+        );
+      }
+      buildVoxelBatch(side < 0 ? wingLeft : wingRight, wingBits, voxelSolidMat);
+    }
+    seagulls.push({ birdRoot, wingLeft, wingRight });
+  }
+
+  // Periodically breaching humpback whale (鲸鱼周期性跃身出水)
+  const whaleGroup = addSubGroup(oceanWorldGroup);
+  const whaleVoxels = [];
+  for (let i = 0; i < 19; i++) {
+    const x = -0.92 + i * 0.101;
+    const u = i / 18;
+    const radius = 0.204 * pow(max(0.1, sin(u * Math.PI * 0.88)), 0.83) * (0.81 + u * 0.40);
+    const cy = 0.006 - (1 - u) * (1 - u) * 0.068;
+    for (let iy = -3; iy <= 3; iy++) {
+      for (let iz = -3; iz <= 3; iz++) {
+        if (iy * iy + iz * iz > 11) continue;
+        addVox(
+          whaleVoxels,
+          x,
+          cy + iy * radius * 0.24,
+          iz * radius * 0.29,
+          0.104,
+          radius * 0.26,
+          radius * 0.31,
+          iy < -1
+            ? pick([0x9eb0aa, 0xc4c7af, 0x86a7a7])
+            : pick([0x215972, 0x356e83, 0x2c6179, 0x42859b])
+        );
+      }
+    }
+  }
+  for (const side of [-1, 1]) {
+    for (let j = 0; j < 8; j++) {
+      // Tail flukes & pectoral fins
+      addVox(whaleVoxels, -0.89 - j * 0.017, -0.061 + sin(j * 0.33) * 0.045, side * (0.057 + j * 0.041), 0.177 - j * 0.014, 0.049, 0.049, pick([0x2f6783, 0x397c8d]));
+      addVox(whaleVoxels,  0.27 - j * 0.038, -0.12  - j * 0.013,             side * (0.115 + j * 0.037), 0.120 - j * 0.010, 0.044, 0.054, 0x377287);
+    }
+    addVox(whaleVoxels, 0.74, 0.041, side * 0.176, 0.039, 0.039, 0.018, 0x16232c);
+    addVox(whaleVoxels, 0.747, 0.050, side * 0.187, 0.014, 0.013, 0.008, 0xf5dcc3);
+  }
+  for (let j = 0; j < 5; j++) {
+    addVox(whaleVoxels, -0.42 - j * 0.027, 0.12 + 0.034 * j, 0, 0.126 - 0.019 * j, 0.047, 0.067 - 0.007 * j, 0x2b586e);
+  }
+  buildVoxelBatch(whaleGroup, whaleVoxels, voxelSolidMat);
+
+  // Schooling tropical reef fish (鱼群)
+  const fishAgents = Array.from({ length: 28 }, () => ({
+    x: randRange(-0.54, 0.54),
+    y: randRange(-0.24, 0.24),
+    z: randRange(-0.29, 0.29),
+    phase: randRange(0, TAU),
+    size: randRange(0.78, 1.28),
+    color: pick([0xe6aa54, 0xd97f54, 0x6bc7b8, 0xdec68b])
+  }));
+  const fishInitVoxels = [];
+  for (const f of fishAgents) {
+    const s = f.size;
+    addVox(fishInitVoxels, 0, 0, 0, 0.163 * s, 0.069 * s, 0.043 * s, f.color);
+    addVox(fishInitVoxels, 0, 0, 0, 0.082 * s, 0.094 * s, 0.051 * s, f.color);
+    addVox(fishInitVoxels, -0.101 * s, 0, 0, 0.051 * s, 0.084 * s, 0.026 * s, f.color);
+    addVox(fishInitVoxels,  0.051 * s, 0.01, 0.027 * s, 0.018 * s, 0.017 * s, 0.010 * s, 0x1f2e30);
+  }
+  const fishInstMesh = buildVoxelBatch(oceanWorldGroup, fishInitVoxels, voxelSolidMat);
+  fishInstMesh.frustumCulled = false;
+  fishInstMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+  // Scuttling beach crab with snapping claws (螃蟹)
+  const crabGroup = addSubGroup(islandGroup, -0.66, -0.376, 0.58);
+  const crabClaws = [];
+  const crabBodyVoxels = [];
+  addVox(crabBodyVoxels, 0, 0.039, 0, 0.126, 0.071, 0.084, 0xb0503a);
+  addVox(crabBodyVoxels, 0, 0.066, 0.013, 0.106, 0.035, 0.064, 0xda6f48);
+  for (const side of [-1, 1]) {
+    addVox(crabBodyVoxels, side * 0.031, 0.096, 0.034, 0.017, 0.024, 0.018, 0x582c24);
+    for (let leg = 0; leg < 4; leg++) {
+      addVox(crabBodyVoxels, side * 0.077, 0.018, leg * 0.026 - 0.041, 0.079, 0.018, 0.016, 0xb44d35, side * 0.32, 0, side * 0.17);
+    }
+    const clawPivot = addSubGroup(crabGroup, side * 0.071, 0.059, 0.059);
+    const clawBits = [];
+    addVox(clawBits, side * 0.034, 0, 0.026, 0.074, 0.031, 0.028, 0xcb6341);
+    addVox(clawBits, side * 0.070, 0.001, 0.054, 0.054, 0.040, 0.053, 0xe88651);
+    for (const pincer of [-1, 1]) {
+      addVox(clawBits, side * 0.070 + pincer * 0.018, 0, 0.088, 0.015, 0.032, 0.035, 0xdd774b, pincer * 0.2);
+    }
+    buildVoxelBatch(clawPivot, clawBits, voxelSolidMat);
+    crabClaws.push(clawPivot);
+  }
+  buildVoxelBatch(crabGroup, crabBodyVoxels, voxelSolidMat);
+
+  // ============================================================================
+  // 17. CELESTIAL BODIES (SUN, MOON, MIDNIGHT STARS) & STORM CLOUDS + LIGHTNING
+  // ============================================================================
+  const skyBodyMat = makeClippedVoxelMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.65, roughness: 0.2 }, false);
+  const sunGroup = addSubGroup(oceanWorldGroup);
+  const moonGroup = addSubGroup(oceanWorldGroup);
+  const sunVoxels = [];
+  const moonVoxels = [];
+  for (let ix = -4; ix <= 4; ix++) {
+    for (let iy = -4; iy <= 4; iy++) {
+      if (ix * ix + iy * iy > 17) continue;
+      const px = ix * 0.062;
+      const py = iy * 0.062;
+      addVox(sunVoxels, px, py, 0, 0.063, 0.063, 0.078, ix * ix + iy * iy > 11 ? 0xffc876 : 0xffe8a9);
+      if ((ix - 1.80) ** 2 + (iy - 1.15) ** 2 > 11) {
+        addVox(moonVoxels, px, py, 0, 0.063, 0.063, 0.070, 0xcaeced);
+      }
+    }
+  }
+  buildVoxelBatch(sunGroup, sunVoxels, skyBodyMat);
+  buildVoxelBatch(moonGroup, moonVoxels, skyBodyMat);
+  const sunCoronaGlow = addBottleGlow(sunGroup, 0, 0, 0.055, 1.08);
+
+  // Midnight starfield inside the upper bottle sky arch (子夜星空)
+  const starVoxels = [];
+  for (let i = 0; i < 98; i++) {
+    const sx = randRange(-5.45, 3.78);
+    const sy = randRange(0.56, 2.36);
+    const sz = randRange(-1.62, -0.44);
+    if (sy * sy + sz * sz > 2.35 * 2.35) continue;
+    const ss = randRange(0.014, 0.042);
+    addVox(starVoxels, sx, sy, sz, ss, ss, 0.018, pick([0xecf7ff, 0xe1ebfc, 0xf7e6c8]));
+    if (i % 12 === 0) {
+      addVox(starVoxels, sx, sy, sz, 0.012, ss * 2.6, 0.020, 0xe0eeff);
+    }
+  }
+  const starMat = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, opacity: 0 });
+  starMat.onBeforeCompile = (shader) => {
+    shader.uniforms.invBottle = uInvBottle;
+    shader.vertexShader = 'varying vec3 vHullWorld;\n' + shader.vertexShader.replace(
+      '#include <project_vertex>',
+      `
+      vec4 hullPos = vec4(transformed, 1.0);
+      #ifdef USE_INSTANCING
+        hullPos = instanceMatrix * hullPos;
+      #endif
+      vHullWorld = (modelMatrix * hullPos).xyz;
+      #include <project_vertex>
+      `
+    );
+    shader.fragmentShader = bottleClipGLSL + 'varying vec3 vHullWorld;\n' + shader.fragmentShader.replace(
+      '#include <clipping_planes_fragment>',
+      '#include <clipping_planes_fragment>\nif (isOutsideBottle(vHullWorld, 0.028)) discard;'
+    );
+  };
+  const starsBatch = buildVoxelBatch(oceanWorldGroup, starVoxels, starMat);
+  starsBatch.renderOrder = 3;
+
+  // Ominous storm thunderclouds (乌云) & branching lightning bolts (闪电)
+  const stormCloudsGroup = addSubGroup(oceanWorldGroup);
+  const stormCloudVoxels = [];
+  for (let i = 0; i < 640; i++) {
+    const cx = randRange(-4.82, 3.88);
+    const cy = randRange(1.54, 2.28);
+    const cz = randRange(-0.95, 0.03);
+    const ridge = 1.95 + sin(cx * 3.1) * 0.18 + 0.12 * cos(cx * 7.4);
+    if (abs(cy - ridge) > 0.22 || abs(cz + 0.46) > 0.39 + 0.13 * cos(cx * 4)) continue;
+    addVox(
+      stormCloudVoxels,
+      cx,
+      cy,
+      cz,
+      randRange(0.20, 0.47),
+      randRange(0.09, 0.22),
+      randRange(0.21, 0.42),
+      pick([0x2b3b47, 0x354450, 0x45525d, 0x566473])
+    );
+  }
+  const stormCloudMat = makeClippedVoxelMaterial({ transparent: true, depthWrite: false, roughness: 1.0 }, false);
+  const stormCloudsBatch = buildVoxelBatch(stormCloudsGroup, stormCloudVoxels, stormCloudMat);
+  stormCloudsBatch.renderOrder = 4;
+
+  const lightningGroup = addSubGroup(oceanWorldGroup);
+  const lightningBoltMat = new THREE.MeshBasicMaterial({ color: 0xe8f8ff, transparent: true, depthWrite: false });
+  lightningBoltMat.onBeforeCompile = starMat.onBeforeCompile;
+  const mainStrikePts = [
+    [-3.50, 1.86, -0.37],
+    [-3.31, 1.41, -0.30],
+    [-3.58, 1.45, -0.26],
+    [-3.38, 0.99, -0.17],
+    [-3.55, 1.02, -0.19],
+    [-3.12, 0.13, -0.04],
+    [-3.27, 0.08, -0.02],
+    [-3.04, -0.38, 0.03]
+  ];
+  function addLightningBranch(pts) {
+    for (let i = 1; i < pts.length; i++) {
+      const a = new THREE.Vector3(...pts[i - 1]);
+      const b = new THREE.Vector3(...pts[i]);
+      const dir = b.clone().sub(a);
+      const seg = addMesh(lightningGroup, new THREE.CylinderGeometry(0.012, 0.017, a.distanceTo(b), 5), lightningBoltMat);
+      seg.position.copy(a).lerp(b, 0.5);
+      seg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+      seg.renderOrder = 11;
+    }
+  }
+  addLightningBranch(mainStrikePts);
+  addLightningBranch([mainStrikePts[3], [-3.15, 1.01, -0.19], [-2.93, 0.71, -0.49], [-2.77, 0.49, -0.51]]);
+  addLightningBranch([mainStrikePts[5], [-3.04, 0.13, -0.28], [-2.88, -0.13, -0.61]]);
+
+  // ============================================================================
+  // 18. BOW SPRAY, WAKE TRAIL, STORM FOAM & RISING UNDERWATER BUBBLES
+  // ============================================================================
+  const foamParticleMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.66, depthWrite: false });
+  foamParticleMat.onBeforeCompile = starMat.onBeforeCompile;
+  const foamInitVoxels = [];
+  for (let i = 0; i < 240; i++) {
+    addVox(foamInitVoxels, 0, -15, 0, 1, 1, 1, pick([0xf2f9e0, 0xbaefe2, 0x82d1c5, 0xd5f9ed]));
+  }
+  const foamInstMesh = buildVoxelBatch(oceanWorldGroup, foamInitVoxels, foamParticleMat);
+  foamInstMesh.frustumCulled = false;
+  foamInstMesh.renderOrder = 8;
+  foamInstMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  const foamSeeds = foamInitVoxels.map(() => [rand(), rand(), rand()]);
+
+  const bubbleMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.54, depthWrite: false });
+  bubbleMat.onBeforeCompile = starMat.onBeforeCompile;
+  const bubbleInitVoxels = [];
+  const bubbleStreams = [];
+  for (let i = 0; i < 72; i++) {
+    addVox(bubbleInitVoxels, 0, 0, 0, 1, 1, 1, i % 4 ? 0x9af0e6 : 0xe8fae3);
+    bubbleStreams.push({
+      x: pick([-3.12, -2.22, -1.52, 0.54, 1.44, 2.52]) + randRange(-0.22, 0.22),
+      z: randRange(0.60, 1.25),
+      phase: rand(),
+      size: randRange(0.022, 0.049),
+      speed: randRange(0.078, 0.22)
+    });
+  }
+  const bubbleInstMesh = buildVoxelBatch(oceanWorldGroup, bubbleInitVoxels, bubbleMat);
+  bubbleInstMesh.frustumCulled = false;
+  bubbleInstMesh.renderOrder = 8;
+  bubbleInstMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+  // ============================================================================
+  // 19. SHIP NAVIGATION ORBIT & 4-POINT WAVE BUOYANCY PHYSICS
+  // ============================================================================
+  function evaluateShipRoute(angle) {
+    const rx = -0.49 + 3.76 * cos(angle);
+    const rz = 1.51 * sin(angle);
+    const yaw = atan2(-1.51 * cos(angle), -3.76 * sin(angle));
+    return { x: rx, z: rz, yaw };
+  }
+
+  const ROUTE_START_ANGLE = 2.10;
+  let shipPitch = 0;
+  let shipRoll = 0;
+  let shipHeave = SEA_LEVEL;
+
+  function updateOceanSimulation(simTime, dt, stormLevel) {
+    const orbitAngle = ROUTE_START_ANGLE + simTime * 0.099;
+    const pose = evaluateShipRoute(orbitAngle);
+    const cosY = cos(pose.yaw);
+    const sinY = sin(pose.yaw);
+
+    // 4-point wave height sampling around hull: Bow, Stern, Port, Starboard
+    const hBow       = getWaveHeightCPU(pose.x + 1.21 * cosY, pose.z - 1.21 * sinY, simTime, stormLevel);
+    const hStern     = getWaveHeightCPU(pose.x - 1.21 * cosY, pose.z + 1.21 * sinY, simTime, stormLevel);
+    const hPort      = getWaveHeightCPU(pose.x + 0.39 * sinY, pose.z + 0.39 * cosY, simTime, stormLevel);
+    const hStarboard = getWaveHeightCPU(pose.x - 0.39 * sinY, pose.z - 0.39 * cosY, simTime, stormLevel);
+
+    const smoothFactor = 1 - exp(-dt * 8.2);
+    shipHeave = lerp(shipHeave, (hBow + hStern + hPort + hStarboard) * 0.25 - 0.021, smoothFactor);
+    shipPitch = lerp(shipPitch, atan2(hBow - hStern, 2.42) * 0.82, smoothFactor);
+    shipRoll  = lerp(shipRoll,  atan2(hStarboard - hPort, 0.78) * 0.68, smoothFactor);
+
+    shipGroup.position.set(pose.x, shipHeave, pose.z);
+    shipGroup.rotation.set(shipRoll, pose.yaw, shipPitch, 'YXZ');
+
+    // Rowboat & Buoy wave coupling
+    skiffGroup.position.y = getWaveHeightCPU(skiffGroup.position.x, skiffGroup.position.z, simTime, stormLevel);
+    skiffGroup.rotation.set(0.07 * sin(simTime * 2.0), -0.73, 0.09 * cos(simTime * 1.9));
+
+    buoyGroup.position.y = getWaveHeightCPU(buoyGroup.position.x, buoyGroup.position.z, simTime, stormLevel) + 0.009;
+    buoyGroup.rotation.z = 0.14 * sin(simTime * 2.2) * (1 + stormLevel * 1.4);
+
+    // Beach crab scuttling & snapping claws
+    crabGroup.position.x = -0.64 + 0.10 * sin(simTime * 0.94);
+    crabGroup.rotation.y = sin(simTime * 0.93) * 0.24;
+    crabClaws[0].rotation.x = sin(simTime * 5.0) * 0.35;
+    crabClaws[1].rotation.x = cos(simTime * 5.0) * 0.35;
+
+    // Rotating lighthouse beam
+    lighthouseBeamPivot.rotation.y = -simTime * 1.15;
+
+    // Subtle cloud drift
+    fairCloudsGroup.position.x = 0.145 * sin(simTime * 0.13);
+    fairCloudsGroup.position.z = 0.075 * sin(simTime * 0.17);
+
+    // 6 circling seagulls
+    for (let i = 0; i < 6; i++) {
+      const gull = seagulls[i];
+      const theta = simTime * (0.69 + i * 0.018) + i * 1.047;
+      const rx = 1.24 + i * 0.13;
+      const rz = 0.48 + i * 0.046;
+      const gx = -0.13 + rx * cos(theta);
+      const gz = rz * sin(theta) + 0.13;
+      gull.birdRoot.position.set(gx, 1.53 + (i % 3) * 0.106 + 0.092 * sin(theta * 2 + i), gz);
+      gull.birdRoot.rotation.y = atan2(-rz * cos(theta), -rx * sin(theta));
+      const flap = sin(simTime * (5.9 + i * 0.9) + i) * (0.28 + 0.31 * max(0, sin(theta * 2)));
+      gull.wingLeft.rotation.x = flap - 0.09;
+      gull.wingRight.rotation.x = -flap + 0.09;
+    }
+
+    // Schooling underwater fish
+    for (let i = 0; i < fishAgents.length; i++) {
+      const f = fishAgents[i];
+      const theta = simTime * 0.43 + f.phase * 0.15 + (i >= 14 ? 3.3 : 0);
+      const fx = sin(theta) * 2.54 + f.x;
+      const fz = 0.80 + cos(theta) * 0.64 + f.z;
+      const fy = -1.22 + sin(simTime * 1.8 + f.phase) * 0.12 + f.y;
+      const fyaw = atan2(sin(theta) * 0.64, cos(theta) * 2.54);
+      const cy = cos(fyaw), sy = sin(fyaw), s = f.size;
+      const tailYaw = fyaw + 0.38 * sin(simTime * 11 + i);
+      setInstancePose(fishInstMesh, i * 4,     fx, fy, fz, 0.163 * s, 0.069 * s, 0.043 * s, fyaw);
+      setInstancePose(fishInstMesh, i * 4 + 1, fx - 0.014 * cy, fy, fz + 0.014 * sy, 0.082 * s, 0.094 * s, 0.051 * s, fyaw);
+      setInstancePose(fishInstMesh, i * 4 + 2, fx - 0.101 * s * cy, fy, fz + 0.101 * s * sy, 0.051 * s, 0.084 * s, 0.026 * s, tailYaw);
+      setInstancePose(fishInstMesh, i * 4 + 3, fx + (0.051 * cy + 0.027 * sy) * s, fy + 0.01 * s, fz + (-0.051 * sy + 0.027 * cy) * s, 0.018 * s, 0.017 * s, 0.010 * s, fyaw);
+    }
+    fishInstMesh.instanceMatrix.needsUpdate = true;
+
+    // Rising underwater bubbles
+    for (let i = 0; i < bubbleStreams.length; i++) {
+      const b = bubbleStreams[i];
+      const prog = (b.phase + simTime * b.speed) % 1;
+      const bx = b.x + sin(prog * 7 + i) * 0.078;
+      const bz = b.z + cos(prog * 7 + i) * 0.051;
+      const by = lerp(-1.93, getWaveHeightCPU(bx, bz, simTime, stormLevel) - 0.035, prog);
+      const bs = b.size * (0.44 + 0.56 * prog);
+      setInstancePose(bubbleInstMesh, i, bx, by, bz, bs * 0.82, bs, bs * 0.82, simTime + i);
+    }
+    bubbleInstMesh.instanceMatrix.needsUpdate = true;
+
+    // Periodic whale breach cycle
+    const whaleCycle = (simTime + 5.2) % 24;
+    const breachProg = clamp((whaleCycle - 8.5) / 3.4, 0, 1);
+    const isBreaching = whaleCycle >= 8.5 && whaleCycle <= 11.9;
+    const diveProg = ((whaleCycle - 11.9 + 24) % 24) / (24 - 3.4);
+    const wx = isBreaching ? lerp(-4.10, -1.92, breachProg) : lerp(-1.92, -4.10, diveProg) + sin(diveProg * TAU) * 0.60;
+    const wz = isBreaching ? lerp(-0.70, -0.39, breachProg) : lerp(-0.39, -0.70, diveProg) - sin(diveProg * Math.PI) * 0.70;
+    const wy = SEA_LEVEL - 0.56 + (isBreaching ? sin(breachProg * Math.PI) * 1.42 : -sin(diveProg * Math.PI) * 0.52);
+    const whaleTurn = isBreaching ? 0 : pow(sin(diveProg * Math.PI), 0.58) * Math.PI;
+    whaleGroup.position.set(wx, wy, wz);
+    whaleGroup.rotation.set(
+      0.12 * sin(simTime * 0.65),
+      -0.16 + whaleTurn,
+      isBreaching ? 0.72 * cos(breachProg * Math.PI) : 0.72 * (2 * diveProg - 1) * exp(-5 * sin(diveProg * Math.PI))
+    );
+
+    // Bow spray, wake trail, island surf, whale splash & storm spindrift
+    for (let i = 0; i < foamSeeds.length; i++) {
+      const [r0, r1, r2] = foamSeeds[i];
+      let fx, fy, fz, fSize;
+      if (i < 108) {
+        // Ship wake ribbon
+        const f = (r0 + simTime * (0.28 + r1 * 0.13)) % 1;
+        const wakePose = evaluateShipRoute(orbitAngle - 0.035 - f * 0.46);
+        const spread = (r1 - 0.5) * (0.29 + 1.16 * f);
+        fx = wakePose.x - 1.13 * cos(wakePose.yaw) + spread * sin(wakePose.yaw);
+        fz = wakePose.z + 1.13 * sin(wakePose.yaw) + spread * cos(wakePose.yaw);
+        fy = getWaveHeightCPU(fx, fz, simTime, stormLevel) + 0.013;
+        fSize = (0.025 + r2 * 0.054) * (1 - f * 0.83);
+      } else if (i < 160) {
+        // Ship bow spray (船艏飞沫)
+        const f = (r0 + simTime * (1.12 + r1 * 0.36)) % 1;
+        const side = (r1 - 0.5) * (0.32 + f * 0.72);
+        fx = pose.x + (1.39 + f * 0.22) * cosY + side * sinY;
+        fz = pose.z - (1.39 + f * 0.22) * sinY + side * cosY;
+        fy = getWaveHeightCPU(fx, fz, simTime, stormLevel) + sin(f * Math.PI) * (0.055 + stormLevel * 0.22) * (r2 + 0.36);
+        fSize = 0.024 + (1 - f) * 0.038 * r2;
+      } else if (i < 198) {
+        // Island shore surf foam
+        const f = (r0 + simTime * 0.5) % 1;
+        const theta = r1 * TAU;
+        fx = 1.62 + cos(theta) * (1.13 + 0.34 * f);
+        fz = -0.15 + sin(theta) * (0.83 + 0.21 * f);
+        fy = getWaveHeightCPU(fx, fz, simTime, stormLevel) + 0.012 + stormLevel * 0.05 * sin(f * Math.PI);
+        fSize = (1 - f) * (0.027 + 0.043 * r2);
+      } else if (whaleCycle > 10.1 && whaleCycle < 13.5 && i < 222) {
+        // Whale breach splash ring
+        const f = (whaleCycle - 10.1) / 3.4;
+        const theta = r1 * TAU;
+        fx = -2.12 + cos(theta) * (r0 * 0.49 + f * 0.54);
+        fz = -0.43 + sin(theta) * (r0 * 0.33 + f * 0.44);
+        fy = getWaveHeightCPU(fx, fz, simTime, stormLevel) + sin(f * Math.PI) * 0.62 * r0 * r2;
+        fSize = 0.018 + (1 - f) * 0.078 * r2;
+      } else {
+        // Storm wind spindrift across the bottle sea
+        const f = (r0 + simTime * (0.54 + r1 * 0.22)) % 1;
+        fx = -5.15 + r1 * 8.80;
+        fz = (r2 - 0.5) * 4.20;
+        fy = getWaveHeightCPU(fx, fz, simTime, stormLevel) + sin(Math.PI * f) * 0.60 * stormLevel;
+        fSize = 0.084 * stormLevel * (1 - f * 0.70);
+      }
+      fSize = max(0.0001, fSize);
+      setInstancePose(foamInstMesh, i, fx, fy, fz, fSize * 1.28, fSize * 0.62, fSize, simTime * 0.42 + r1 * TAU);
+    }
+    foamInstMesh.instanceMatrix.needsUpdate = true;
+  }
+
+  // ============================================================================
+  // 20. DAY/NIGHT TIME-LAPSE CYCLE (黎明 / 正午 / 黄昏 / 子夜) & STORM ATMOSPHERE
+  // ============================================================================
+  const phaseBadgeEl = document.getElementById('phase-badge');
+  const clockReadoutEl = document.getElementById('clock-readout');
+  const phaseStepEls = [...document.querySelectorAll('.phase-step')];
+  const roomBackdropEl = document.getElementById('room-backdrop');
+  const PHASE_NAMES = ['黎明', '正午', '黄昏', '子夜'];
+
+  const keyframes = [
+    { hour: 0,  sky: 0x9bb6f8, ground: 0x173262, sun: 0xb2ccff, keyInt: 0.52, day: 0.25, night: 1.00, roomBri: 0.54 },
+    { hour: 6,  sky: 0xffcaa4, ground: 0x407a90, sun: 0xffbb90, keyInt: 2.65, day: 0.82, night: 0.16, roomBri: 0.90 },
+    { hour: 12, sky: 0xc6eeff, ground: 0x4f8683, sun: 0xffe9ba, keyInt: 4.12, day: 1.15, night: 0.00, roomBri: 1.16 },
+    { hour: 18, sky: 0xffd4aa, ground: 0x275d70, sun: 0xffb674, keyInt: 2.86, day: 0.86, night: 0.22, roomBri: 1.00 },
+    { hour: 24, sky: 0x9bb6f8, ground: 0x173262, sun: 0xb2ccff, keyInt: 0.52, day: 0.25, night: 1.00, roomBri: 0.54 }
+  ];
+  for (const kf of keyframes) {
+    kf.skyCol = new THREE.Color(kf.sky);
+    kf.groundCol = new THREE.Color(kf.ground);
+    kf.sunCol = new THREE.Color(kf.sun);
+  }
+
+  let currentHour = 17 + 45 / 60; // Starts in warm Dusk atmosphere (17:45)
+  let lastDisplayedMinute = -1;
+
+  function updateAtmosphereAndSky(realElapsed, stormLevel, dt, timeRate) {
+    currentHour = (currentHour + dt * timeRate * 0.072) % 24;
+    const segIdx = floor(currentHour / 6);
+    const kfA = keyframes[segIdx];
+    const kfB = keyframes[segIdx + 1];
+    const tSeg = smoothstep(currentHour, kfA.hour, kfB.hour);
+
+    const stormDim = 1 - 0.73 * stormLevel;
+    const boltPhase = (realElapsed + 1.9) % 4.2;
+    const lightningPulse = stormLevel * 0.94 * max(
+      exp(-((boltPhase - 0.78) ** 2) / 0.0026),
+      0.62 * exp(-((boltPhase - 1.04) ** 2) / 0.0034)
+    );
+
+    uFlash.value = lightningPulse;
+    uStorm.value = stormLevel;
+    uNight.value = lerp(kfA.night, kfB.night, tSeg);
+    uDaylight.value = lerp(kfA.day, kfB.day, tSeg) * stormDim;
+
+    hemiLight.color.copy(kfA.skyCol).lerp(kfB.skyCol, tSeg).lerp(tempColor.setHex(0x8ca8c6), stormLevel * 0.78);
+    hemiLight.groundColor.copy(kfA.groundCol).lerp(kfB.groundCol, tSeg);
+    hemiLight.intensity = 0.58 + uDaylight.value * 0.84 + lightningPulse * 0.88;
+
+    sunKeyLight.color.copy(kfA.sunCol).lerp(kfB.sunCol, tSeg).lerp(tempColor.setHex(0x9bc5ec), stormLevel * 0.80);
+    sunKeyLight.intensity = lerp(kfA.keyInt, kfB.keyInt, tSeg) * stormDim + lightningPulse * 5.4;
+    rimBackLight.intensity = 0.78 + uNight.value * 0.35 + lightningPulse;
+    deskWarmBounce.intensity = 29 + uNight.value * 17;
+
+    // Night warm lights intensify strongly at Dusk & Midnight ("夜晚灯火热光更浓")
+    voxelWindowMat.emissiveIntensity = 0.78 + uNight.value * 2.45 + stormLevel * 0.95;
+
+    // Sun & Moon orbital trajectory inside the bottle sky arch
+    const celestialOrbit = ((currentHour - 6) / 24) * TAU;
+    sunGroup.position.set(-4.05 * cos(celestialOrbit), 1.04 + 0.91 * sin(celestialOrbit), -0.84 + 0.16 * cos(celestialOrbit));
+    moonGroup.position.set(3.70 * cos(celestialOrbit), 1.03 - 0.88 * sin(celestialOrbit), -0.89);
+
+    sunKeyLight.position.set(-4.5 * cos(celestialOrbit - 0.45), 5.6 + 3.0 * abs(sin(celestialOrbit)), 5.0);
+    uSunDir.value.copy(sunKeyLight.position).normalize();
+
+    sunGroup.visible = sin(celestialOrbit) > 0 && stormLevel < 0.77;
+    moonGroup.visible = sin(celestialOrbit) < 0 && stormLevel < 0.78;
+    sunCoronaGlow.visible = stormLevel < 0.30;
+    sunGroup.rotation.y = 0.21;
+    moonGroup.rotation.y = 0.19;
+
+    starsBatch.visible = uNight.value > 0.30 && stormLevel < 0.88;
+    starMat.opacity = smoothstep(uNight.value, 0.28, 0.92) * (1 - stormLevel);
+
+    stormCloudsGroup.visible = stormLevel > 0.025;
+    stormCloudsGroup.position.x = sin(realElapsed * 0.52) * 0.34;
+    stormCloudMat.opacity = stormLevel * 0.94;
+    fairCloudsBatch.visible = stormLevel < 0.56;
+
+    lightningGroup.visible = lightningPulse > 0.14;
+    lightningGroup.position.x = (floor((realElapsed + 1.9) / 4.2) % 3) * 1.68;
+    lightningBoltMat.opacity = min(1, lightningPulse * 1.95);
+
+    const totalMinutes = floor(currentHour * 60);
+    if (totalMinutes !== lastDisplayedMinute) {
+      lastDisplayedMinute = totalMinutes;
+      const hh = String(floor(totalMinutes / 60)).padStart(2, '0');
+      const mm = String(totalMinutes % 60).padStart(2, '0');
+      clockReadoutEl.textContent = `${hh}:${mm}`;
+      clockReadoutEl.dateTime = `${hh}:${mm}`;
+
+      const quarterIdx = (floor(((currentHour + 3) % 24) / 6) + 3) % 4;
+      phaseBadgeEl.textContent = PHASE_NAMES[quarterIdx];
+      phaseStepEls.forEach((el, idx) => el.classList.toggle('active', idx === quarterIdx));
+
+      const brightness = lerp(kfA.roomBri, kfB.roomBri, tSeg) * (1 - stormLevel * 0.22);
+      roomBackdropEl.style.filter = `brightness(${brightness.toFixed(2)})`;
+    }
+  }
+
+  // ============================================================================
+  // 21. CAMERA ORBIT CONTROLS, AUTO-ROTATE RESUME, STORM & SPEED INTERACTION
+  // ============================================================================
+  const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const speedBtns = [...document.querySelectorAll('.speed-btn')];
+  const stormBtn = document.getElementById('storm-btn');
+  const fpsReadoutEl = document.getElementById('fps-readout');
+
+  let timeLapseRate = 1;
+  let stormIntensity = 0;
+  let spaceKeyHeld = false;
+  let stormBtnHeld = false;
+
+  let camAzimuth = 0.28, targetAzimuth = 0.28;
+  let camAltitude = 0.24, targetAltitude = 0.24;
+  let camZoom = 1.0, targetZoom = 1.0;
+  let activePointerId = null;
+  let prevPointerX = 0, prevPointerY = 0;
+  let lastInteractionTime = -5000;
+
+  function syncStormButtonUI() {
+    stormBtn.setAttribute('aria-pressed', String(spaceKeyHeld || stormBtnHeld));
+  }
+
+  speedBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      timeLapseRate = Number(btn.dataset.rate);
+      speedBtns.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+    });
+  });
+
+  stormBtn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    stormBtn.setPointerCapture(e.pointerId);
+    stormBtnHeld = true;
+    syncStormButtonUI();
+  });
+  for (const evName of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    stormBtn.addEventListener(evName, () => {
+      stormBtnHeld = false;
+      syncStormButtonUI();
+    });
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      spaceKeyHeld = true;
+      syncStormButtonUI();
+    }
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '-', '='].includes(e.key)) {
+      lastInteractionTime = performance.now();
+      if (e.key === 'ArrowLeft')  targetAzimuth -= 0.12;
+      if (e.key === 'ArrowRight') targetAzimuth += 0.12;
+      if (e.key === 'ArrowUp')    targetAltitude = clamp(targetAltitude + 0.08, 0.03, 0.86);
+      if (e.key === 'ArrowDown')  targetAltitude = clamp(targetAltitude - 0.08, 0.03, 0.86);
+      if (['-', '+', '='].includes(e.key)) {
+        targetZoom = clamp(targetZoom * (e.key === '-' ? 1.08 : 0.92), 0.54, 1.58);
+      }
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    if (e.code === 'Space') {
+      spaceKeyHeld = false;
+      syncStormButtonUI();
+    }
+  });
+
+  window.addEventListener('blur', () => {
+    spaceKeyHeld = false;
+    stormBtnHeld = false;
+    activePointerId = null;
+    canvas.classList.remove('dragging');
+    syncStormButtonUI();
+  });
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (activePointerId !== null || e.button !== 0) return;
+    activePointerId = e.pointerId;
+    prevPointerX = e.clientX;
+    prevPointerY = e.clientY;
+    canvas.setPointerCapture(activePointerId);
+    canvas.classList.add('dragging');
+    lastInteractionTime = performance.now();
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== activePointerId) return;
+    targetAzimuth -= (e.clientX - prevPointerX) * 0.0078;
+    targetAltitude = clamp(targetAltitude + (e.clientY - prevPointerY) * 0.006, 0.03, 0.86);
+    prevPointerX = e.clientX;
+    prevPointerY = e.clientY;
+    lastInteractionTime = performance.now();
+  });
+
+  for (const evName of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    canvas.addEventListener(evName, (e) => {
+      if (e.pointerId !== activePointerId) return;
+      activePointerId = null;
+      lastInteractionTime = performance.now();
+      canvas.classList.remove('dragging');
+    });
+  }
+
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    lastInteractionTime = performance.now();
+    const wheelScale = e.deltaMode === 1 ? 15 : e.deltaMode === 2 ? window.innerHeight : 1;
+    targetZoom = clamp(targetZoom * exp(e.deltaY * wheelScale * 0.0011), 0.54, 1.58);
+  }, { passive: false });
+
+  // ============================================================================
+  // 22. RESIZE & 60 FPS RENDER LOOP WITH DYNAMIC RESOLUTION SCALING
+  // ============================================================================
+  let baseCamDist = 23.0;
+  let currentPixelRatio = 1.0;
+  let fpsFrames = 0;
+  let fpsAccumTime = 0;
+  let lastFrameNow = performance.now();
+  let oceanSimClock = 0;
+  let realClock = 0;
+
+  function onWindowResize() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    currentPixelRatio = min(window.devicePixelRatio || 1, 1.6, sqrt(2300000 / max(1, w * h)));
+    renderer.setPixelRatio(currentPixelRatio);
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    baseCamDist = max(19.2, 27.6 / camera.aspect);
+  }
+  window.addEventListener('resize', onWindowResize);
+  onWindowResize();
+
+  function renderFrame(now) {
+    const rawDt = (now - lastFrameNow) / 1000;
+    const dt = clamp(rawDt, 0, 0.05);
+    lastFrameNow = now;
+
+    const stormTriggered = spaceKeyHeld || stormBtnHeld;
+    if (timeLapseRate > 0 || stormTriggered || stormIntensity > 0.03) {
+      oceanSimClock += dt;
+    }
+    uTime.value = oceanSimClock;
+    realClock += dt;
+
+    stormIntensity = lerp(
+      stormIntensity,
+      stormTriggered ? 1 : 0,
+      1 - exp(-dt * (stormTriggered ? 3.2 : 2.1))
+    );
+
+    updateAtmosphereAndSky(realClock, stormIntensity, dt, timeLapseRate);
+
+    // Bottle rocks in its wooden cradle during the storm while oceanWorldGroup stays level!
+    bottleShellGroup.rotation.z = stormIntensity * (sin(realClock * 2.85) * 0.062 + sin(realClock * 6.8) * 0.012);
+    bottleShellGroup.rotation.x = stormIntensity * sin(realClock * 3.85) * 0.115;
+    bottleShellGroup.updateMatrixWorld(true);
+    uInvBottle.value.copy(bottleShellGroup.matrixWorld).invert();
+
+    updateOceanSimulation(oceanSimClock, timeLapseRate || stormIntensity > 0.003 ? dt : 0, stormIntensity);
+
+    // Auto-resume gentle orbit rotation after 3.6 seconds of idle
+    if (!reducedMotionQuery.matches && activePointerId === null && now - lastInteractionTime > 3600) {
+      targetAzimuth += dt * 0.092;
+    }
+
+    const camDamp = 1 - exp(-dt * 12);
+    camAzimuth  = lerp(camAzimuth,  targetAzimuth,  camDamp);
+    camAltitude = lerp(camAltitude, targetAltitude, camDamp);
+    camZoom     = lerp(camZoom,     targetZoom,     camDamp);
+
+    const dist = baseCamDist * camZoom;
+    const lookTargetY = 2.74;
+    camera.position.set(
+      dist * sin(camAzimuth) * cos(camAltitude),
+      lookTargetY + dist * sin(camAltitude),
+      dist * cos(camAzimuth) * cos(camAltitude)
+    );
+    camera.lookAt(0.14, lookTargetY, 0);
+
+    renderer.render(scene, camera);
+
+    if (!statusBanner.hidden && !renderer.getContext().isContextLost()) {
+      statusBanner.hidden = true;
+    }
+
+    if (rawDt < 0.25) {
+      fpsAccumTime += rawDt;
+      fpsFrames++;
+    }
+    if (fpsAccumTime >= 0.8) {
+      const measuredFps = Math.round(fpsFrames / fpsAccumTime);
+      fpsReadoutEl.textContent = `${min(60, measuredFps)} FPS`;
+      if (measuredFps < 48 && currentPixelRatio > 0.82) {
+        currentPixelRatio = max(0.80, currentPixelRatio * 0.86);
+        renderer.setPixelRatio(currentPixelRatio);
+      }
+      fpsFrames = 0;
+      fpsAccumTime = 0;
+    }
+
+    requestAnimationFrame(renderFrame);
+  }
+
+  canvas.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    statusBanner.textContent = 'WebGL 上下文已丢失，请刷新页面重试。';
+    statusBanner.hidden = false;
+  });
+
+  requestAnimationFrame(renderFrame);
+}
+</script>
+</body>
+</html>

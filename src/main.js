@@ -43,6 +43,27 @@ if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: re
   reveal.forEach(el => io.observe(el));
 }
 
+// ---- copy buttons ----
+function bindCopy(copy, status, readText, fallbackTarget) {
+  copy.addEventListener('click', async () => {
+    const label = $('span', copy);
+    let ok = false;
+    try { await navigator.clipboard.writeText(readText()); ok = true; }
+    catch {
+      if (fallbackTarget) {
+        const range = document.createRange(); range.selectNodeContents(fallbackTarget);
+        const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
+        try { ok = document.execCommand('copy'); } catch { ok = false; }
+      }
+    }
+    const msg = ok ? copy.dataset.done : copy.dataset.fail;
+    label.textContent = msg; status.textContent = msg;
+    copy.classList.toggle('done', ok);
+    clearTimeout(copy.timer);
+    copy.timer = setTimeout(() => { label.textContent = copy.dataset.label; copy.classList.remove('done'); }, 2000);
+  });
+}
+
 // ---- install command ----
 for (const box of $$('[data-install]')) {
   const code = $('code', box);
@@ -53,22 +74,12 @@ for (const box of $$('[data-install]')) {
       code.textContent = b.dataset.command;
     });
   }
-  const copy = $('[data-copy]', box);
-  copy.addEventListener('click', async () => {
-    const label = $('span', copy);
-    let ok = false;
-    try { await navigator.clipboard.writeText(code.textContent); ok = true; }
-    catch {
-      const range = document.createRange(); range.selectNodeContents(code);
-      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
-      try { ok = document.execCommand('copy'); } catch { ok = false; }
-    }
-    const msg = ok ? copy.dataset.done : copy.dataset.fail;
-    label.textContent = msg; status.textContent = msg;
-    copy.classList.toggle('done', ok);
-    clearTimeout(copy.timer);
-    copy.timer = setTimeout(() => { label.textContent = copy.dataset.label; copy.classList.remove('done'); }, 2000);
-  });
+  bindCopy($('[data-copy]', box), status, () => code.textContent, code);
+}
+
+for (const copy of $$('[data-copy-prompt]')) {
+  const prompt = JSON.parse(copy.dataset.copyPrompt);
+  bindCopy(copy, $('[data-copy-status]', copy.closest('article')), () => prompt);
 }
 
 // ---- live data (same-origin, see vercel.json) ----

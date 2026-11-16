@@ -39,6 +39,11 @@
       "title": "Harness Plugins",
       "desc": "Plugins for DeepSeek Harness (DSH), installed with the dsh CLI."
     },
+    "vibeCoding": {
+      "title": "Vibe Coding Showcase",
+      "desc": "Small interactive projects built with AI.",
+      "empty": "No projects yet."
+    },
     "writing": {
       "title": "Writing",
       "desc": "Latest posts from the blog.",
@@ -72,6 +77,13 @@
     "econQuarter": "ABS quarterly data to {q}",
     "econCountries": "Annual data for {n} economies",
     "unavailable": "Not available right now"
+  },
+  "demo": {
+    "details": "Details to look for",
+    "preview": "Preview",
+    "copyPrompt": "Copy prompt",
+    "promptPending": "Prompt pending",
+    "copyFailed": "Copy failed. Please try again"
   },
   "projects": {
     "jobs": {
@@ -142,6 +154,26 @@
         "34 bundled Vercel skills"
       ],
       "installNote": "Desktop: initialize and fully quit DSH Desktop before installing, then restart it."
+    },
+    "atollJelly": {
+      "name": "Atoll Jelly",
+      "desc": "Six stilt houses, a seaplane and a few rays share a lagoon made of turquoise jelly. Stir the water or drop in a swimming ring and watch it drift.",
+      "highlights": [
+        "Drag across the surface to send out ripples and watch the rings bob.",
+        "Orbit to the side to see rays swimming below the surface and the terrain through the jelly."
+      ],
+      "imageAlt": "A turquoise jelly lagoon with stilt houses, a small island, a seaplane and floating rings, next to the control panel.",
+      "requirements": "Requires a browser with WebGPU support."
+    },
+    "bottledSea": {
+      "name": "Bottled Sea",
+      "desc": "A voxel sailing ship passes a lighthouse above fish, coral and a sunken treasure chest. The whole scene fits inside a glass bottle lying on its side.",
+      "highlights": [
+        "Hold Space or the storm button to rock the bottle. The water stays level overall, with the waves contained inside.",
+        "Speed up the day–night cycle and watch the lighthouse beam sweep across the water."
+      ],
+      "imageAlt": "At dusk, a horizontal glass bottle holds a voxel sailing ship, a lighthouse and sunken treasure, with a telescope on the desk outside.",
+      "requirements": "Requires a browser with WebGL support."
     }
   },
   "writing": {

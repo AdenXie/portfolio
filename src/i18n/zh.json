@@ -39,6 +39,11 @@
       "title": "Harness Plugins",
       "desc": "DeepSeek Harness（DSH）的插件，用 dsh 命令行安装。"
     },
+    "vibeCoding": {
+      "title": "Vibe Coding大赏",
+      "desc": "用 AI 搭出来的互动小作品。",
+      "empty": "暂无作品。"
+    },
     "writing": {
       "title": "写作",
       "desc": "博客最新文章。",
@@ -72,6 +77,13 @@
     "econQuarter": "ABS 季度数据至 {q}",
     "econCountries": "{n} 个经济体的年度数据",
     "unavailable": "暂时读取不到"
+  },
+  "demo": {
+    "details": "成品亮点",
+    "preview": "预览",
+    "copyPrompt": "复制提示词",
+    "promptPending": "提示词待补充",
+    "copyFailed": "复制失败，请重试"
   },
   "projects": {
     "jobs": {
@@ -142,6 +154,26 @@
         "附带 34 个 Vercel 技能"
       ],
       "installNote": "Desktop：安装前先初始化并完全退出 DSH Desktop，安装后重新启动。"
+    },
+    "atollJelly": {
+      "name": "环礁果冻",
+      "desc": "一整块青绿色果冻里，住着六座高脚水上屋、一架水上飞机和几只鹞鲼。可以搅动泻湖，也可以放个游泳圈看它漂。",
+      "highlights": [
+        "拖动水面会荡开波纹，游泳圈跟着起伏。",
+        "转到侧面还能透过果冻看见游动的鹞鲼和水下地形。"
+      ],
+      "imageAlt": "青绿色果冻泻湖里有水上屋、小岛、水上飞机和漂浮的游泳圈，右侧是控制面板。",
+      "requirements": "预览需要支持 WebGPU 的浏览器。"
+    },
+    "bottledSea": {
+      "name": "瓶中沧海",
+      "desc": "一艘体素帆船驶过灯塔，海面下藏着鱼群、珊瑚和宝箱。整个航海场景都装在一只横放的玻璃瓶里。",
+      "highlights": [
+        "按住空格或风暴按钮，瓶身会摇摆，海面整体仍保持水平，浪花留在瓶内。",
+        "延时摄影可以放快昼夜流转，灯塔的光束会扫过海面。"
+      ],
+      "imageAlt": "黄昏时分，横放的玻璃瓶里有体素帆船、灯塔和海底宝箱，瓶外是木桌和望远镜。",
+      "requirements": "预览需要支持 WebGL 的浏览器。"
     }
   },
   "writing": {

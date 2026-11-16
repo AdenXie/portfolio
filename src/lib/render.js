@@ -161,7 +161,32 @@ function toolCard(p, t) {
 </article>`;
 }
 
-const layouts = { website: websiteCard, skill: skillCard, plugin: pluginCard, tool: toolCard };
+function demoCard(p, t) {
+  const text = t.projects[p.id];
+  const d = t.demo;
+  const promptAttrs = p.prompt
+    ? `data-copy-prompt="${esc(JSON.stringify(p.prompt))}"`
+    : `disabled title="${esc(d.promptPending)}"`;
+  return `<article class="card card-demo reveal" id="work-${esc(p.id)}">
+  <img class="demo-shot" src="${esc(p.image)}" width="1280" height="800" alt="${esc(text.imageAlt)}" loading="lazy" decoding="async">
+  <div class="card-body">
+    <h3>${esc(text.name)}</h3>
+    <p class="desc">${esc(text.desc)}</p>
+    <div class="demo-details">
+      <h4>${esc(d.details)}</h4>
+      <ul>${text.highlights.map(detail => `<li>${esc(detail)}</li>`).join('')}</ul>
+    </div>
+    <p class="stamp">${esc(text.requirements)}</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="${esc(projectUrl(p, t))}" aria-label="${esc(d.preview)} · ${esc(text.name)}">${esc(d.preview)}${icon.arrow}</a>
+      <button type="button" class="btn" ${promptAttrs} data-label="${esc(d.copyPrompt)}" data-done="${esc(t.card.copied)}" data-fail="${esc(d.copyFailed)}">${icon.copy}<span>${esc(d.copyPrompt)}</span></button>
+    </div>
+    <p class="sr-only" role="status" data-copy-status></p>
+  </div>
+</article>`;
+}
+
+const layouts = { website: websiteCard, skill: skillCard, plugin: pluginCard, tool: toolCard, demo: demoCard };
 
 // ---- page ----
 
@@ -170,11 +195,12 @@ export function renderPage(t, data, other) {
   const blogHome = t.lang === 'en' ? `${site.blog}en/` : site.blog;
   const sections = categories.map(c => {
     const items = projects.filter(p => p.category === c.id);
-    if (!items.length) return '';
     const s = t.sections[c.id];
+    if (!items.length && !s.empty) return '';
+    const desc = items.length ? s.desc : s.empty;
     return `<section class="section" id="${esc(c.id)}" aria-labelledby="h-${esc(c.id)}">
-  <div class="section-head reveal"><h2 id="h-${esc(c.id)}">${esc(s.title)}</h2><p>${esc(s.desc)}</p></div>
-  <div class="cards cards-${esc(c.layout)}">${items.map(p => layouts[c.layout](p, t, data)).join('\n')}</div>
+  <div class="section-head reveal"><h2 id="h-${esc(c.id)}">${esc(s.title)}</h2>${desc ? `<p>${esc(desc)}</p>` : ''}</div>
+  ${items.length ? `<div class="cards cards-${esc(c.layout)}">${items.map(p => layouts[c.layout](p, t, data)).join('\n')}</div>` : ''}
 </section>`;
   }).join('\n');
 
