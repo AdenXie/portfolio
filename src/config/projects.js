@@ -134,6 +134,12 @@ export const projects = [
     image: '/media/screens/pocket-planet.webp',
     prompt: pocketPlanetPrompt,
   },
+  {
+    id: 'longyinGarden',
+    category: 'vibeCoding',
+    url: '/demos/longyin-garden.html',
+    image: '/media/screens/longyin-garden.webp',
+  },
 ];
 
 // Live data. The page reads these same-origin paths at runtime (vercel.json rewrites them

@@ -194,6 +194,17 @@
       ],
       "imageAlt": "A low-poly planet against a deep blue sky, with a lake, a clock tower, houses along a path and a hot-air balloon overhead.",
       "requirements": "Requires a browser with WebGL support."
+    },
+    "longyinGarden": {
+      "name": "Hidden Dragon Court · Voxel Sky Garden",
+      "desc": "A voxel Japanese garden on an island floating above a sea of clouds, with a five-storey pagoda, a torii gate, an arched bridge, a tea house, a dry rock garden and a koi pond. A dragon circles the island, and a waterfall spills off its edge into the clouds.",
+      "highlights": [
+        "Drag the time bar through dawn, noon, dusk and night. At night the paper windows glow and fireflies come out.",
+        "Click around the garden to ring the temple bell, feed the koi, shake down cherry blossoms and greet the villagers, and find all six garden secrets.",
+        "Press Space to make the dragon breathe fire, or F to fly along with it."
+      ],
+      "imageAlt": "Voxel Japanese garden island in daylight, floating above a sea of clouds, with a five-storey pagoda, a red torii gate, bamboo and pink cherry trees, and a teal dragon flying overhead.",
+      "requirements": "Requires a browser with WebGL support and access to the three.js CDN."
     }
   },
   "writing": {
