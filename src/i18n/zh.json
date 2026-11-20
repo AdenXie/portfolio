@@ -31,6 +31,10 @@
       "title": "桌面工具",
       "desc": "在自己电脑上运行的小工具，从 GitHub Releases 下载。"
     },
+    "rootModules": {
+      "title": "Root 模块",
+      "desc": "装进 KernelSU 等 root 管理器的模块，从 GitHub Releases 下载。"
+    },
     "skills": {
       "title": "Agent Skills",
       "desc": "给编程智能体用的技能包，装好之后在对话里直接调用。"
@@ -114,6 +118,16 @@
         "可选 WPR/ETW 深度跟踪"
       ],
       "requirements": "Windows 11 x64，需要管理员授权；Windows 10 尚未验证。"
+    },
+    "pandoraAirdrop": {
+      "name": "小米 17 Pro 原生 AirDrop",
+      "desc": "一个 KernelSU 模块，让小米 17 Pro 的小米互传直接和 iPhone 互相隔空投送。只在打开「与Apple设备互传」时临时把 Wi‑Fi 切到 AirDrop 模式，结束后自动恢复，不修改任何分区。移植自 houji-airdrop。",
+      "highlights": [
+        "iPhone → 小米实测 45–53 MB/s",
+        "Live Photo 自动合成为动态照片",
+        "小米 → iPhone 也能发送"
+      ],
+      "requirements": "仅支持小米 17 Pro（HyperOS OS4.0.6.0.XBLCNXM 及指定内核），需要 KernelSU 和 LSPosed，并自备三星 S26 Ultra 的 WLAN 固件。"
     },
     "photoCard": {
       "name": "Photo English Card",

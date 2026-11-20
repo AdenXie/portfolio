@@ -31,6 +31,10 @@
       "title": "Desktop Tools",
       "desc": "Small tools that run on your own computer, downloaded from GitHub Releases."
     },
+    "rootModules": {
+      "title": "Root Modules",
+      "desc": "Modules for root managers such as KernelSU, downloaded from GitHub Releases."
+    },
     "skills": {
       "title": "Agent Skills",
       "desc": "Skill packs for coding agents: install once, then call them from a chat."
@@ -114,6 +118,16 @@
         "Optional WPR/ETW deep tracing"
       ],
       "requirements": "Windows 11 x64, needs administrator permission. Windows 10 not yet verified."
+    },
+    "pandoraAirdrop": {
+      "name": "Native AirDrop for Xiaomi 17 Pro",
+      "desc": "A KernelSU module that lets Xiaomi Share on the Xiaomi 17 Pro exchange AirDrop transfers with iPhones. It switches Wi‑Fi into AirDrop mode only while the Apple-device sharing screen is open, restores it afterwards, and modifies no partitions. Ported from houji-airdrop.",
+      "highlights": [
+        "45–53 MB/s from iPhone in testing",
+        "Live Photos become Xiaomi motion photos",
+        "Sends to iPhone too"
+      ],
+      "requirements": "Xiaomi 17 Pro only (HyperOS OS4.0.6.0.XBLCNXM with a specific kernel). Needs KernelSU and LSPosed, plus the Samsung S26 Ultra WLAN firmware, which you supply yourself."
     },
     "photoCard": {
       "name": "Photo English Card",

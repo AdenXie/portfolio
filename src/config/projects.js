@@ -21,6 +21,7 @@ export const site = {
 export const categories = [
   { id: 'websites', layout: 'website' },
   { id: 'desktopTools', layout: 'tool' },
+  { id: 'rootModules', layout: 'tool' },
   { id: 'skills', layout: 'skill' },
   { id: 'harnessPlugins', layout: 'plugin' },
   { id: 'vibeCoding', layout: 'demo' },
@@ -56,6 +57,13 @@ export const projects = [
     source: 'https://github.com/AdenXie/StutterScope',
     download: 'https://github.com/AdenXie/StutterScope/releases/latest',
     tech: ['C#', '.NET Framework 4.8', 'PresentMon', 'ETW'],
+  },
+  {
+    id: 'pandoraAirdrop',
+    category: 'rootModules',
+    source: 'https://github.com/AdenXie/pandora-airdrop',
+    download: 'https://github.com/AdenXie/pandora-airdrop/releases/latest',
+    tech: ['KernelSU', 'LSPosed', 'WLAN driver', 'AWDL'],
   },
   {
     id: 'photoCard',
