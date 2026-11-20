@@ -8,7 +8,7 @@
 //   tool    — download and Source buttons, requirements note (no image)
 //   demo    — screenshot, interactive preview, and an optional prompt to copy
 
-import { atollJellyPrompt, bottledSeaPrompt, rainyNightStorePrompt, pocketPlanetPrompt } from './prompts.js';
+import { atollJellyPrompt, bottledSeaPrompt, rainyNightStorePrompt, pocketPlanetPrompt, longyinGardenPrompt } from './prompts.js';
 
 export const site = {
   url: 'https://adenxie.com.cn',
@@ -139,6 +139,7 @@ export const projects = [
     category: 'vibeCoding',
     url: '/demos/longyin-garden.html',
     image: '/media/screens/longyin-garden.webp',
+    prompt: longyinGardenPrompt,
   },
 ];
 
